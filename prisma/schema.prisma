@@ -19,3 +19,29 @@ model User {
   usuario String @unique
   password String
 }
+
+// TABLA DE ROLES
+model Role {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  abbreviation String
+  permissions RolePermission[]
+}
+
+// TABLA DE PERMISOS
+model Permission {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  status  Boolean @default(true)
+  roles   RolePermission[]
+}
+
+// TABLA DE UNIFICACION ROLES PERMISOS
+model RolePermission {
+  roleId      Int
+  permissionId Int
+  role        Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission  Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId]) // Llave compuesta para la relación muchos a muchos
+}
