@@ -4,7 +4,7 @@ dotenv.config()
 
 /** IMPORTAMOS DE LIBRERIAS  */
 import express from 'express';
-const cors = require('cors');
+const cors = require('cors')
 
 /** IMPORTAMOS RUTAS DE ARCHIVOS */
 import authRoutes from './routes/AuthRoutes'
@@ -15,6 +15,8 @@ import permission from './routes/PermissionRoutes'
 const app = express()
 app.use(express.json());
 
+// CORS
+app.use(cors()); 
 
 // RUTAS
 app.use('/auth', authRoutes);
@@ -23,9 +25,6 @@ app.use('/api', permission)
 
 // AUTENTICACION
 
-
-// CORS
-app.use(cors());
 
 // Hacer una apirest de usuarios
 
