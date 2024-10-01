@@ -47,8 +47,9 @@ model De_permiso {
 
 model Usuario {
   dni       String  @id @db.Char(8)
-  n_usu     String 
-  estado    Boolean
+  n_usu     String  
+  estado    Boolean @default(true)
+  password  String
   rol_id    Int
   id_sub    Int
   rol       Roles   @relation(fields: [rol_id], references: [id_rol])

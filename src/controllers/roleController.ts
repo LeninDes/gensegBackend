@@ -1,18 +1,18 @@
-import { Request, Response, NextFunction } from 'express';
+/*import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-/** CREAR UN NUEVO ROL */
+/** CREAR UN NUEVO ROL 
 export const nuevoRol = async (req: Request, res: Response, next: NextFunction) => {
-    const { name, abbreviation, permissions } = req.body;
+    const { n_rol, abrev, permissions } = req.body;
 
     try {
-        const nuevoRol = await prisma.role.create({
+        const nuevoRol = await prisma.roles.create({
             data: {
-                name,
-                abbreviation,
-                permissions: {
+                n_rol,
+                abrev,
+                deta_perm: {
                     create: permissions.map((permissionId: number) => ({
                         permission: { connect: { id: permissionId } }
                     }))
@@ -27,10 +27,10 @@ export const nuevoRol = async (req: Request, res: Response, next: NextFunction) 
 };
 
 
-/** OBTENER ROLES */
+/** OBTENER ROLES 
 export const obtenerRoles = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const roles = await prisma.role.findMany({
+        const roles = await prisma.roles.findMany({
             include: { permissions: true } // Para incluir las relaciones con permisos
         });
         res.json(roles);
@@ -41,12 +41,12 @@ export const obtenerRoles = async (req: Request, res: Response, next: NextFuncti
 };
 
 
-/** OBTENER ROL - POR ID */
+/** OBTENER ROL - POR ID 
 export const obtenerRol = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     try {
-        const rol = await prisma.role.findUnique({
+        const rol = await prisma.roles.findUnique({
             where: { id: Number(id) },
             include: { permissions: true }
         });
@@ -62,13 +62,13 @@ export const obtenerRol = async (req: Request, res: Response, next: NextFunction
     }
 };
 
-/** ACTUALIZAR  ROL */
+/** ACTUALIZAR  ROL 
 export const actualizarRol = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const { name, abbreviation, permissions } = req.body;
 
     try {
-        const rolActualizado = await prisma.role.update({
+        const rolActualizado = await prisma.roles.update({
             where: { id: Number(id) },
             data: {
                 name,
@@ -89,12 +89,12 @@ export const actualizarRol = async (req: Request, res: Response, next: NextFunct
     }
 };
 
-/** ELIMIAR EL ROL */
+/** ELIMIAR EL ROL 
 export const eliminarRol = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     try {
-        await prisma.role.delete({
+        await prisma.roles.delete({
             where: { id: Number(id) }
         });
         res.json({ mensaje: 'Rol eliminado correctamente' });
@@ -103,7 +103,7 @@ export const eliminarRol = async (req: Request, res: Response, next: NextFunctio
         next(error);
     }
 };
-
+*/
 
 /**
  * {
