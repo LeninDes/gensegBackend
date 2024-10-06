@@ -10,18 +10,18 @@ export const createPermisoWithDePermisos = async (req: Request, res: Response): 
 
     try {
         // Paso 1: Crear el nuevo permiso
-        const newPermiso = await prisma.permisos.create({
+        const newPermiso = await prisma.permiso.create({
             data: {
-                n_per,
-                abrev,
+                n_per: n_per,
+                abreviatura: abrev,
             },
         });
 
         // Paso 2: Obtener todos los roles existentes
-        const allRoles = await prisma.roles.findMany();
+        const allRoles = await prisma.rol.findMany();
 
         // Paso 3: Crear automáticamente detalles de permiso (De_permiso) para cada rol
-        const dePermisos = await prisma.de_permiso.createMany({
+        const dePermisos = await prisma.detallePermiso.createMany({
             data: allRoles.map(role => ({
                 id_rol: role.id_rol,
                 id_per: newPermiso.id_per,
@@ -48,13 +48,13 @@ export const updatePermisoWithDePermisos = async (req: Request, res: Response): 
 
     try {
         // Paso 1: Actualizar el permiso
-        const updatedPermiso = await prisma.permisos.update({
+        const updatedPermiso = await prisma.permiso.update({
             where: {
                 id_per: parseInt(id),
             },
             data: {
-                n_per,
-                abrev,
+                n_per: n_per,
+                abreviatura: abrev,
             },
         });
 
@@ -75,14 +75,14 @@ export const deletePermisoWithDePermisos = async (req: Request, res: Response): 
 
     try {
         // Paso 1: Eliminar todos los detalles de permiso relacionados con este permiso
-        await prisma.de_permiso.deleteMany({
+        await prisma.detallePermiso.deleteMany({
             where: {
                 id_per: parseInt(id),
             },
         });
 
         // Paso 2: Eliminar el permiso
-        const deletedPermiso = await prisma.permisos.delete({
+        const deletedPermiso = await prisma.permiso.delete({
             where: {
                 id_per: parseInt(id),
             },
@@ -105,10 +105,10 @@ export const deletePermisoWithDePermisos = async (req: Request, res: Response): 
 export const createPermiso = async (req: Request, res: Response): Promise<void> => {
     const { n_per, abrev } = req.body;
     try {
-        const newPermiso = await prisma.permisos.create({
+        const newPermiso = await prisma.permiso.create({
             data: {
-                n_per,
-                abrev,
+                n_per: n_per,
+                abreviatura: abrev,
             },
         });
         res.status(201).json(newPermiso);
@@ -121,7 +121,7 @@ export const createPermiso = async (req: Request, res: Response): Promise<void> 
 // Obtener todos los permisos
 export const getAllPermisos = async (req: Request, res: Response): Promise<void> => {
     try {
-        const permisos = await prisma.permisos.findMany();
+        const permisos = await prisma.permiso.findMany();
         res.status(200).json(permisos);
     } catch (error) {
         console.error(error);
@@ -134,7 +134,7 @@ export const updatePermiso = async (req: Request, res: Response): Promise<void> 
     const { id } = req.params;
     const { n_per, abrev } = req.body;
     try {
-        const existingPermiso = await prisma.permisos.findUnique({
+        const existingPermiso = await prisma.permiso.findUnique({
             where: { id_per: parseInt(id) },
         });
 
@@ -142,11 +142,11 @@ export const updatePermiso = async (req: Request, res: Response): Promise<void> 
             res.status(404).json({ message: 'Permiso no encontrado' });
         }
 
-        const updatedPermiso = await prisma.permisos.update({
+        const updatedPermiso = await prisma.permiso.update({
             where: { id_per: parseInt(id) },
             data: {
-                n_per,
-                abrev,
+                n_per: n_per,
+                abreviatura: abrev,
             },
         });
 
@@ -161,7 +161,7 @@ export const updatePermiso = async (req: Request, res: Response): Promise<void> 
 export const deletePermiso = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
-        const existingPermiso = await prisma.permisos.findUnique({
+        const existingPermiso = await prisma.permiso.findUnique({
             where: { id_per: parseInt(id) },
         });
 
@@ -169,7 +169,7 @@ export const deletePermiso = async (req: Request, res: Response): Promise<void> 
             res.status(404).json({ message: 'Permiso no encontrado' });
         }
 
-        await prisma.permisos.delete({
+        await prisma.permiso.delete({
             where: { id_per: parseInt(id) },
         });
 

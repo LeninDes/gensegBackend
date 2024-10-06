@@ -8,7 +8,7 @@ export const createRoleWithDePermisos = async (req: Request, res: Response): Pro
     
     try {
         // Paso 1: Crear el nuevo rol
-        const newRole = await prisma.roles.create({
+        const newRole = await prisma.rol.create({
             data: {
                 n_rol,
                 abrev,
@@ -16,7 +16,7 @@ export const createRoleWithDePermisos = async (req: Request, res: Response): Pro
         });
         
         // Paso 2: Obtener todos los permisos existentes
-        const allPermisos = await prisma.permisos.findMany();
+        const allPermisos = await prisma.permiso.findMany();
         
         // Paso 3: Crear un registro en `De_permiso` para cada permiso existente
         const dePermisosData = allPermisos.map((permiso) => ({
@@ -25,7 +25,7 @@ export const createRoleWithDePermisos = async (req: Request, res: Response): Pro
             estado: false, // o el estado que necesites por defecto
         }));
         
-        await prisma.de_permiso.createMany({
+        await prisma.detallePermiso.createMany({
             data: dePermisosData,
         });
         
@@ -46,14 +46,14 @@ export const deleteRoleWithDePermisos = async (req: Request, res: Response): Pro
 
     try {
         // Paso 1: Eliminar todos los registros de `De_permiso` asociados con el rol
-        await prisma.de_permiso.deleteMany({
+        await prisma.detallePermiso.deleteMany({
             where: {
                 id_rol: parseInt(id),
             },
         });
 
         // Paso 2: Eliminar el rol
-        const deletedRole = await prisma.roles.delete({
+        const deletedRole = await prisma.rol.delete({
             where: {
                 id_rol: parseInt(id),
             },
@@ -76,7 +76,7 @@ export const deleteRoleWithDePermisos = async (req: Request, res: Response): Pro
 export const createRol = async (req: Request, res: Response): Promise<void> => {
     const { n_rol, abrev } = req.body;
     try {
-        const newRol = await prisma.roles.create({
+        const newRol = await prisma.rol.create({
             data: {
                 n_rol,
                 abrev,
@@ -92,7 +92,7 @@ export const createRol = async (req: Request, res: Response): Promise<void> => {
 // Obtener todos los roles
 export const getAllRoles = async (req: Request, res: Response): Promise<void> => {
     try {
-        const roles = await prisma.roles.findMany();
+        const roles = await prisma.rol.findMany();
         res.status(200).json(roles);
     } catch (error) {
         console.error(error);
@@ -105,7 +105,7 @@ export const updateRol = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { n_rol, abrev } = req.body;
     try {
-        const existingRol = await prisma.roles.findUnique({
+        const existingRol = await prisma.rol.findUnique({
             where: { id_rol: parseInt(id) },
         });
 
@@ -113,7 +113,7 @@ export const updateRol = async (req: Request, res: Response): Promise<void> => {
             res.status(404).json({ message: 'Rol no encontrado' });
         }
 
-        const updatedRol = await prisma.roles.update({
+        const updatedRol = await prisma.rol.update({
             where: { id_rol: parseInt(id) },
             data: {
                 n_rol,
@@ -132,7 +132,7 @@ export const updateRol = async (req: Request, res: Response): Promise<void> => {
 export const deleteRol = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
-        const existingRol = await prisma.roles.findUnique({
+        const existingRol = await prisma.rol.findUnique({
             where: { id_rol: parseInt(id) },
         });
 
@@ -140,7 +140,7 @@ export const deleteRol = async (req: Request, res: Response): Promise<void> => {
             res.status(404).json({ message: 'Rol no encontrado' });
         }
 
-        await prisma.roles.delete({
+        await prisma.rol.delete({
             where: { id_rol: parseInt(id) },
         });
 

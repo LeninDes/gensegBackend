@@ -13,8 +13,8 @@ export const newSubUnidad = async (req: Request, res: Response): Promise<void> =
         const subUnidad = await prisma.create(
             {
                 data: {
-                    n_subUni: nombre,
-                    abrev: abreviatura,
+                    n_subuni: nombre,
+                    abreviatura: abreviatura,
                 }
             }
         )
@@ -90,7 +90,7 @@ export const updateSubUnidad = async (req: Request, res: Response): Promise<void
 
         // Verificar que el registro existe
         const existingSubUnidad = await prisma.findUnique({
-            where: { id_subUni: subUnidadId },
+            where: { id_subuni: subUnidadId },
         });
 
         if (!existingSubUnidad) {
@@ -99,10 +99,10 @@ export const updateSubUnidad = async (req: Request, res: Response): Promise<void
 
         // Actualizar la subunidad
         const updatedSubUnidad = await prisma.update({
-            where: { id_subUni: subUnidadId },
+            where: { id_subuni: subUnidadId },
             data: {
-                n_subUni: nombre || existingSubUnidad?.n_subUni,
-                abrev: abreviatura || existingSubUnidad?.abrev,
+                n_subuni: nombre || existingSubUnidad?.n_subuni,
+                abreviatura: abreviatura || existingSubUnidad?.abreviatura,
             },
         });
 
@@ -131,7 +131,7 @@ export const deleteSubUnidad = async (req: Request, res: Response): Promise<void
 
         // Verificar que el registro existe
         const existingSubUnidad = await prisma.findUnique({
-            where: { id_subUni: subUnidadId },
+            where: { id_subuni: subUnidadId },
         });
 
         // Manejo si `existingSubUnidad` es null
@@ -141,7 +141,7 @@ export const deleteSubUnidad = async (req: Request, res: Response): Promise<void
 
         // Eliminar la subunidad
         await prisma.delete({
-            where: { id_subUni: subUnidadId },
+            where: { id_subuni: subUnidadId },
         });
 
         // Enviar respuesta exitosa

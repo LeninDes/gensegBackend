@@ -41,7 +41,7 @@ export const updateDePermiso = async (req: Request, res: Response): Promise<void
     const { id_rol, id_per, estado } = req.body;
     try {
         const existingDePermiso = await prisma.findUnique({
-            where: { id_Dper: parseInt(id) },
+            where: { id_dper: parseInt(id) },
         });
 
         if (!existingDePermiso) {
@@ -49,7 +49,7 @@ export const updateDePermiso = async (req: Request, res: Response): Promise<void
         }
 
         const updatedDePermiso = await prisma.update({
-            where: { id_Dper: parseInt(id) },
+            where: { id_dper: parseInt(id) },
             data: {
                 id_rol,
                 id_per,
@@ -69,7 +69,7 @@ export const deleteDePermiso = async (req: Request, res: Response): Promise<void
     const { id } = req.params;
     try {
         const existingDePermiso = await prisma.findUnique({
-            where: { id_Dper: parseInt(id) },
+            where: { id_dper: parseInt(id) },
         });
 
         if (!existingDePermiso) {
@@ -77,7 +77,7 @@ export const deleteDePermiso = async (req: Request, res: Response): Promise<void
         }
 
         await prisma.delete({
-            where: { id_Dper: parseInt(id) },
+            where: { id_dper: parseInt(id) },
         });
 
         res.status(200).json({ message: 'Detalle de permiso eliminado con éxito' });
