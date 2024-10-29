@@ -100,6 +100,21 @@ export const getAllRoles = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
+export const getRoleswithDNI = async (req: Request, res: Response): Promise<void> => {
+    
+    try {
+        const { dni } = req.params;
+        const getRoles = await prisma.usuario.findMany({
+            where: { dni: dni }  
+        });
+        
+        res.status(200).json(getRoles);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener los roles' });
+    }
+};
+
 // Actualizar un rol por su ID
 export const updateRol = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;

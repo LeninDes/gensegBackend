@@ -63,3 +63,125 @@ model Sub_unidad {
   abreviatura     String
   usuarios     Usuario[]
 }
+
+model Form {
+  idf       Int @id @default(autoincrement())
+  nmForm    String 
+  estado    Boolean @default(false)
+  abre      String?
+  Fcreate   DateTime  @default(now())
+  Fupdate   DateTime?
+  prg       Prg[]
+  res       Res[]
+}
+
+model Prg {
+  idp       Int @id @default(autoincrement())
+  nmPrg     String
+  idf       Int
+  form      Form  @relation(fields: [idf], references: [idf])
+  opcmul    OpcMul[]
+  opcuni    OpcUni[]
+  opcdes    OpcDes[]
+  resom     ResOM[]
+  resou     ResOU[]
+  resod     ResOD[]
+  restxt    ResTxt[]
+  resfile   ResFile[]
+  resdate   ResDate[]
+}
+
+model Res {
+  idres     Int @id @default(autoincrement())
+  idf       Int
+  dni       String
+  date      DateTime  @default(now())
+  form      Form  @relation(fields: [idf], references: [idf])
+  resom     ResOM[]
+  resou     ResOU[]
+  resod     ResOD[]
+  restxt    ResTxt[]
+  resfile   ResFile[]
+  resdate   ResDate[]
+}
+
+model OpcMul {
+  idomul    Int @id @default(autoincrement())
+  idp       Int
+  txtOpc    String
+  prg       Prg   @relation(fields: [idp], references: [idp])
+  resom     ResOM[]
+}
+
+model OpcUni {
+  idoUni    Int   @id   @default(autoincrement())
+  idp       Int
+  txtOpc    String
+  prg       Prg   @relation(fields: [idp], references: [idp])
+  resou     ResOU[]
+}
+
+model OpcDes {
+  idodes    Int   @id   @default(autoincrement())
+  idp       Int
+  txtOpc    String
+  prg       Prg     @relation(fields: [idp], references: [idp])
+  resod     ResOD[]
+}
+
+model ResOM {
+  idresom     Int   @id     @default(autoincrement())
+  idres       Int
+  idp         Int
+  idomul      Int
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+  opcmul      OpcMul  @relation(fields: [idomul], references: [idomul])
+}
+
+model ResOU {
+  idresou     Int   @id     @default(autoincrement())
+  idres       Int
+  idp         Int
+  idou        Int
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+  opcuni      OpcUni  @relation(fields: [idou], references: [idoUni])
+}
+
+model ResOD {
+  idresod     Int   @id     @default(autoincrement())
+  idres       Int
+  idp         Int
+  idodes      Int
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+  opcdes      OpcDes  @relation(fields: [idodes], references: [idodes])
+}
+
+model ResTxt {
+  idrestxt    Int   @id   @default(autoincrement())
+  idp         Int
+  idres       Int
+  resTxt      String?
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+}
+
+model ResFile {
+  idresfile   Int   @id   @default(autoincrement())
+  idres       Int
+  idp         Int
+  resFile     String?
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+}
+
+model ResDate {
+  idresdate   Int   @id   @default(autoincrement())
+  idres       Int
+  idp         Int
+  resdate     String
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+}

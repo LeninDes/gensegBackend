@@ -29,10 +29,9 @@ app.use('/api', subUnidad);
 app.use('/api', Roles);
 app.use('/api', Permisos);
 app.use('/api', De_permisos);
-app.use('/api/auth', Usuarios)
+app.use('/api/auth', Usuarios);
 
 //app.use('/api' )
-
 // AUTENTICACION
 
 

@@ -110,7 +110,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             where: { n_usu: usuario }  // Cambiamos a findFirst ya que n_usu no es único
         });
         const users = await prisma.usuario.findMany({
-            where: { n_usu: usuario }  // Cambiamos a findFirst ya que n_usu no es único
+            where: { n_usu: usuario }  
         });
 
 
@@ -212,7 +212,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         
 
     } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ message: 'Error al crear el usuario.', error });
   } finally {
     await prisma.$disconnect();

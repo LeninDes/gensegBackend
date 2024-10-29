@@ -1,0 +1,177 @@
+-- CreateTable
+CREATE TABLE `Form` (
+    `idf` INTEGER NOT NULL AUTO_INCREMENT,
+    `nmForm` VARCHAR(191) NOT NULL,
+    `estado` BOOLEAN NOT NULL DEFAULT false,
+    `abre` VARCHAR(191) NULL,
+    `Fcreate` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `Fupdate` DATETIME(3) NULL,
+
+    PRIMARY KEY (`idf`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Prg` (
+    `idp` INTEGER NOT NULL AUTO_INCREMENT,
+    `nmPrg` VARCHAR(191) NOT NULL,
+    `idf` INTEGER NOT NULL,
+
+    PRIMARY KEY (`idp`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Res` (
+    `idres` INTEGER NOT NULL AUTO_INCREMENT,
+    `idf` INTEGER NOT NULL,
+    `dni` VARCHAR(191) NOT NULL,
+    `date` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`idres`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `OpcMul` (
+    `idomul` INTEGER NOT NULL AUTO_INCREMENT,
+    `idp` INTEGER NOT NULL,
+    `txtOpc` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`idomul`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `OpcUni` (
+    `idoUni` INTEGER NOT NULL AUTO_INCREMENT,
+    `idp` INTEGER NOT NULL,
+    `txtOpc` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`idoUni`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `OpcDes` (
+    `idodes` INTEGER NOT NULL AUTO_INCREMENT,
+    `idp` INTEGER NOT NULL,
+    `txtOpc` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`idodes`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ResOM` (
+    `idresom` INTEGER NOT NULL AUTO_INCREMENT,
+    `idres` INTEGER NOT NULL,
+    `idp` INTEGER NOT NULL,
+    `idomul` INTEGER NOT NULL,
+
+    PRIMARY KEY (`idresom`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ResOU` (
+    `idresou` INTEGER NOT NULL AUTO_INCREMENT,
+    `idres` INTEGER NOT NULL,
+    `idp` INTEGER NOT NULL,
+    `idou` INTEGER NOT NULL,
+
+    PRIMARY KEY (`idresou`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ResOD` (
+    `idresod` INTEGER NOT NULL AUTO_INCREMENT,
+    `idres` INTEGER NOT NULL,
+    `idp` INTEGER NOT NULL,
+    `idodes` INTEGER NOT NULL,
+
+    PRIMARY KEY (`idresod`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ResTxt` (
+    `idrestxt` INTEGER NOT NULL AUTO_INCREMENT,
+    `idp` INTEGER NOT NULL,
+    `idres` INTEGER NOT NULL,
+    `resTxt` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`idrestxt`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ResFile` (
+    `idresfile` INTEGER NOT NULL AUTO_INCREMENT,
+    `idres` INTEGER NOT NULL,
+    `idp` INTEGER NOT NULL,
+    `resFile` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`idresfile`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ResDate` (
+    `idresdate` INTEGER NOT NULL AUTO_INCREMENT,
+    `idres` INTEGER NOT NULL,
+    `idp` INTEGER NOT NULL,
+    `resdate` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`idresdate`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Prg` ADD CONSTRAINT `Prg_idf_fkey` FOREIGN KEY (`idf`) REFERENCES `Form`(`idf`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Res` ADD CONSTRAINT `Res_idf_fkey` FOREIGN KEY (`idf`) REFERENCES `Form`(`idf`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpcMul` ADD CONSTRAINT `OpcMul_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpcUni` ADD CONSTRAINT `OpcUni_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpcDes` ADD CONSTRAINT `OpcDes_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOM` ADD CONSTRAINT `ResOM_idres_fkey` FOREIGN KEY (`idres`) REFERENCES `Res`(`idres`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOM` ADD CONSTRAINT `ResOM_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOM` ADD CONSTRAINT `ResOM_idomul_fkey` FOREIGN KEY (`idomul`) REFERENCES `OpcMul`(`idomul`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOU` ADD CONSTRAINT `ResOU_idres_fkey` FOREIGN KEY (`idres`) REFERENCES `Res`(`idres`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOU` ADD CONSTRAINT `ResOU_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOU` ADD CONSTRAINT `ResOU_idou_fkey` FOREIGN KEY (`idou`) REFERENCES `OpcUni`(`idoUni`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOD` ADD CONSTRAINT `ResOD_idres_fkey` FOREIGN KEY (`idres`) REFERENCES `Res`(`idres`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOD` ADD CONSTRAINT `ResOD_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResOD` ADD CONSTRAINT `ResOD_idodes_fkey` FOREIGN KEY (`idodes`) REFERENCES `OpcDes`(`idodes`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResTxt` ADD CONSTRAINT `ResTxt_idres_fkey` FOREIGN KEY (`idres`) REFERENCES `Res`(`idres`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResTxt` ADD CONSTRAINT `ResTxt_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResFile` ADD CONSTRAINT `ResFile_idres_fkey` FOREIGN KEY (`idres`) REFERENCES `Res`(`idres`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResFile` ADD CONSTRAINT `ResFile_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResDate` ADD CONSTRAINT `ResDate_idres_fkey` FOREIGN KEY (`idres`) REFERENCES `Res`(`idres`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ResDate` ADD CONSTRAINT `ResDate_idp_fkey` FOREIGN KEY (`idp`) REFERENCES `Prg`(`idp`) ON DELETE RESTRICT ON UPDATE CASCADE;
