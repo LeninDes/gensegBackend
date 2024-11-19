@@ -11,96 +11,6 @@ dotenv.config();
 
 const SECRET_KEY = process.env.JWT_SECRET || 'secretKey';  // Define una secret key
 
-export const createUserWithHashedPasswordAndToken = async (req: Request, res: Response): Promise<void> => {
-    const { dni, n_usu, password, rol_id, id_sub } = req.body;
-
-    try {
-        // Verificar si ya existe un usuario con el mismo DNI
-        const existingUser = await prisma.usuario.findFirst({
-            where: { dni }
-        });
-
-        if (existingUser) {
-            res.status(400).json({
-                message: 'El usuario ya existe'
-            });
-        }
-
-        // Hashear el password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Crear el nuevo usuario
-        const newUser = await prisma.usuario.create({
-            data: {
-                dni: dni,
-                n_usu: n_usu,
-                password: hashedPassword,  // Guardar el password hasheado
-                estado: true,
-                rol_id: rol_id,
-                subunidad_id_subuni : id_sub
-            }
-        });
-
-        // Generar un token
-        const token = jwt.sign(
-            { userId: newUser.dni, role: newUser.rol_id },
-            SECRET_KEY,
-            { expiresIn: '1h' } // El token expira en 1 hora
-        );
-
-        res.status(201).json({
-            message: 'Usuario creado correctamente',
-            token
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            message: 'Error al crear el usuario',
-        });
-    }
-};
-
-export const newcreate = async (req: Request, res: Response): Promise<void> => {
-    const { dni, usuario, password, rol_id, id_sub } = req.body;
-    
-    try {
-        // Verificar si ya existe un usuario con el mismo DNI
-        
-        // Hashear el password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        console.log("pasa aquiiiiii")
-        // Crear el nuevo usuario
-        const newUser = await prisma.usuario.create({
-            data: {
-                dni: dni,
-                n_usu: usuario,
-                password: hashedPassword,  // Guardar el password hasheado
-                estado: true,
-                rol_id: rol_id,
-                subunidad_id_subuni: id_sub
-            }
-        });
-
-        // Generar un token
-        /*const token = jwt.sign(
-            { userId: newUser.dni, role: newUser.rol_id },
-            SECRET_KEY,
-            { expiresIn: '1h' } // El token expira en 1 hora
-        );*/
-        res.json(newUser);
-        res.status(201).json({
-            message: 'Usuario creado correctamente',
-            //token
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            message: 'Error al crear el usuario',
-        });
-    }
-};
-
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const { usuario, password } = req.body;  // Se cambia dni a usuario
 
@@ -219,12 +129,33 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
   }
   };
 
+  export const AllUser =async (req:Request, res: Response): Promise<void> => {
+    try {
+        // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
+        const users = await prisma.usuario.findMany({
+          include: {
+            rol: {
+            },
+            sub_uni: true  // Trae la subunidad asociada al usuario
+          }
+        });
+        
+        // Retornamos los usuarios con las relaciones
+        res.json(users);
+      } catch (error) {
+        // Si hay un error, lo manejamos
+        console.error(error);
+        res.status(500).json({ error: "Algo salió mal al obtener los usuarios." });
+      }
+  };
+
+
 
   /* 
-  
+
   {
   "dni": "74652485",
-  "n_usu": "ssss",
+  "usuario  ": "ssss",
   "password": "root",
   "rol_id": 1,
   "id_sub": 1

@@ -119,7 +119,7 @@ export const updateSubUnidad = async (req: Request, res: Response): Promise<void
 
 export const deleteSubUnidad = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
-
+    console.log(id);
     try {
         // Validar que se proporciona el ID
         if (!id) {
@@ -127,7 +127,7 @@ export const deleteSubUnidad = async (req: Request, res: Response): Promise<void
         }
 
         // Convertir el ID a número (si es necesario)
-        const subUnidadId = parseInt(id, 10);
+        const subUnidadId = parseInt(id);
 
         // Verificar que el registro existe
         const existingSubUnidad = await prisma.findUnique({
