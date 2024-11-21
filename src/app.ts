@@ -13,6 +13,7 @@ import Permisos from './routes/privilegios/permisos'
 import Roles from './routes/privilegios/roles'
 import De_permisos from './routes/privilegios/de_permisos'
 import Usuarios from './routes/privilegios/usuarios'
+import Form from './routes/formulario/form'
 
 // APP CON EXPRESS
 const app = express()
@@ -30,13 +31,10 @@ app.use('/api', Roles);
 app.use('/api', Permisos);
 app.use('/api', De_permisos);
 app.use('/api/auth', Usuarios);
-
+//API para formularios
+app.use('/api/', Form)
 //app.use('/api' )
 // AUTENTICACION
 
-
-// Hacer una apirest de usuarios
-
-console.log("Esto esta siendo ejecutado")
 
 export default app;

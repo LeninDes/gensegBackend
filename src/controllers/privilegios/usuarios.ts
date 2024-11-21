@@ -20,7 +20,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             where: { n_usu: usuario }  // Cambiamos a findFirst ya que n_usu no es único
         });
         const users = await prisma.usuario.findMany({
-            where: { n_usu: usuario }  
+            where: { n_usu: usuario, estado: true }  
         });
 
 
@@ -149,6 +149,20 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       }
   };
 
+  export const getUserwithDNI = async (req: Request, res: Response): Promise<void> => {
+    
+    try {
+        const { dni } = req.params;
+        const getRoles = await prisma.usuario.findFirst({
+            where: { dni: dni, estado: true }  
+        });
+        
+        res.status(200).json(getRoles);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener los roles' });
+    }
+};
 
 
   /* 
