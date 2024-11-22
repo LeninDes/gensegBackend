@@ -11,6 +11,8 @@ dotenv.config();
 
 const SECRET_KEY = process.env.JWT_SECRET || 'secretKey';  // Define una secret key
 
+
+
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const { usuario, password } = req.body;  // Se cambia dni a usuario
 
@@ -70,6 +72,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     const { dni, usuario, password, rol_id, id_sub } = req.body;
 
   try {
+
     // Verificar si el usuario con la misma combinación de dni, rol_id, id_sub ya existe
     const existingUser = await prisma.usuario.findUnique({
       where: {
