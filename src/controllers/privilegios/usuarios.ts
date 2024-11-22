@@ -2,15 +2,15 @@ import { Request, Response } from 'express';
 //import bcrypt from 'bcryptjs';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-//import prisma from '../prisma';  // Asegúrate de usar el cliente Prisma adecuado
 import dotenv from 'dotenv';
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 dotenv.config();
 
-const SECRET_KEY = process.env.JWT_SECRET || 'secretKey';  // Define una secret key
+const SECRET_KEY = process.env.JWT_SECRET || 'secretKey';  // Define una secret 
 
+/*---------- METODO LOGIN -------*/
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const { usuario, password } = req.body;  // Se cambia dni a usuario
 
@@ -65,7 +65,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-
+/*---------- CREAR USUARIO -------*/
 export const createUser = async (req: Request, res: Response): Promise<void> => {
     const { dni, usuario, password, rol_id, id_sub } = req.body;
 
