@@ -1,12 +1,11 @@
 import { Request, Response } from "express";
 import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/respuestaOpcionDesplegable'
 // Crear ResOM
-// Crear ResOD
 export const createResOD = async (req: Request, res: Response): Promise<void> => {
     const { idres, idp, idodes } = req.body;
     try {
         const resOD = await prisma.create({
-            data: { idres, idp, idodes },
+            data: { idres:idres, idp:idp, idodes:idodes },
         });
         res.status(201).json({ resOD });
     } catch (error: any) {
@@ -30,7 +29,7 @@ export const updateResOD = async (req: Request, res: Response): Promise<void> =>
     const { idodes } = req.body;
     try {
         const resOD = await prisma.update({
-            where: { id: parseInt(id, 10) },
+            where: { idresod: parseInt(id, 10) },
             data: { idodes },
         });
         res.status(200).json({ resOD });
@@ -44,7 +43,7 @@ export const deleteResOD = async (req: Request, res: Response): Promise<void> =>
     const { id } = req.params;
     try {
         await prisma.delete({
-            where: { id: parseInt(id, 10) },
+            where: { idresod: parseInt(id, 10) },
         });
         res.status(200).json({ message: "Respuesta desordenada eliminada correctamente" });
     } catch (error: any) {

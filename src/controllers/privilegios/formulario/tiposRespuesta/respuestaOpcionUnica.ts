@@ -6,7 +6,7 @@ export const createResOU = async (req: Request, res: Response): Promise<void> =>
     const { idres, idp, idou } = req.body;
     try {
         const resOU = await prisma.create({
-            data: { idres, idp, idou },
+            data: { idres:idres, idp:idp, idou:idou },
         });
         res.status(201).json({ resOU });
     } catch (error: any) {
@@ -30,8 +30,8 @@ export const updateResOU = async (req: Request, res: Response): Promise<void> =>
     const { idou } = req.body;
     try {
         const resOU = await prisma.update({
-            where: { id: parseInt(id, 10) },
-            data: { idou },
+            where: { idresou: parseInt(id, 10) },
+            data: { idou:idou },
         });
         res.status(200).json({ resOU });
     } catch (error: any) {
@@ -44,7 +44,7 @@ export const deleteResOU = async (req: Request, res: Response): Promise<void> =>
     const { id } = req.params;
     try {
         await prisma.delete({
-            where: { id: parseInt(id, 10) },
+            where: { idresou: parseInt(id, 10) },
         });
         res.status(200).json({ message: "Respuesta única eliminada correctamente" });
     } catch (error: any) {

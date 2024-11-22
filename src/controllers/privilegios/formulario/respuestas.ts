@@ -5,7 +5,9 @@ export const createRes = async (req: Request, res: Response): Promise<void> => {
     const { dni, idf } = req.body;
     try {
         const result = await prisma.create({
-            data: { dni, idf },
+            data: { 
+                dni:dni,
+                idf: idf },
         });
         res.status(201).json({ result });
     } catch (error: any) {
@@ -28,7 +30,7 @@ export const updateRes = async (req: Request, res: Response): Promise<void> => {
     try {
         const result = await prisma.update({
             where: { idres: parseInt(id, 10) },
-            data: { dni },
+            data: { dni:dni },
         });
         res.status(200).json({ result });
     } catch (error: any) {

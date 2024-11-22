@@ -5,7 +5,7 @@ export const createResOM = async (req: Request, res: Response): Promise<void> =>
     const { idres, idp, idomul } = req.body;
     try {
         const resOM = await prisma.create({
-            data: { idres, idp, idomul },
+            data: { idres:idres, idp:idp, idomul:idomul },
         });
         res.status(201).json({ resOM });
     } catch (error: any) {
@@ -29,8 +29,8 @@ export const updateResOM = async (req: Request, res: Response): Promise<void> =>
     const { idomul } = req.body;
     try {
         const resOM = await prisma.update({
-            where: { id: parseInt(id, 10) },
-            data: { idomul },
+            where: { idresom: parseInt(id, 10) },
+            data: { idomul:idomul },
         });
         res.status(200).json({ resOM });
     } catch (error: any) {
@@ -43,7 +43,7 @@ export const deleteResOM = async (req: Request, res: Response): Promise<void> =>
     const { id } = req.params;
     try {
         await prisma.delete({
-            where: { id: parseInt(id, 10) },
+            where: { idresom: parseInt(id, 10) },
         });
         res.status(200).json({ message: "Respuesta múltiple eliminada correctamente" });
     } catch (error: any) {

@@ -4,10 +4,10 @@ import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/res
 
 // Crear RespuestaFecha
 export const createRespuestaFecha = async (req: Request, res: Response): Promise<void> => {
-    const { idres, fecha } = req.body;
+    const { idres,idp, resdate } = req.body;
     try {
         const respuestaFecha = await prisma.create({
-            data: { idres, fecha },
+            data: { idres:idres, idp:idp,resdate:resdate },
         });
         res.status(201).json({ respuestaFecha });
     } catch (error: any) {
@@ -28,11 +28,11 @@ export const getAllRespuestaFecha = async (_req: Request, res: Response): Promis
 // Actualizar RespuestaFecha
 export const updateRespuestaFecha = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    const { fecha } = req.body;
+    const { resdate } = req.body;
     try {
         const respuestaFecha = await prisma.update({
-            where: { id: parseInt(id, 10) },
-            data: { fecha },
+            where: { idresdate: parseInt(id, 10) },
+            data: { resdate:resdate },
         });
         res.status(200).json({ respuestaFecha });
     } catch (error: any) {
@@ -45,7 +45,7 @@ export const deleteRespuestaFecha = async (req: Request, res: Response): Promise
     const { id } = req.params;
     try {
         await prisma.delete({
-            where: { id: parseInt(id, 10) },
+            where: { idresdate: parseInt(id, 10) },
         });
         res.status(200).json({ message: "Respuesta fecha eliminada correctamente" });
     } catch (error: any) {

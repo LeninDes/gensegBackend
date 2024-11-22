@@ -6,7 +6,9 @@ export const createOpcMul = async (req: Request, res: Response): Promise<void> =
     const { idp, txtOpc } = req.body;
     try {
         const opcMul = await prisma.create({
-            data: { idp, txtOpc },
+            data: { 
+                idp:idp,
+                txtOpc:txtOpc },
         });
         res.status(201).json({ opcMul });
     } catch (error: any) {
@@ -33,7 +35,7 @@ export const updateOpcMul = async (req: Request, res: Response): Promise<void> =
     try {
         const opcMul = await prisma.update({
             where: { idomul: parseInt(id, 10) },
-            data: { txtOpc },
+            data: { txtOpc:txtOpc },
         });
         res.status(200).json({ opcMul });
     } catch (error: any) {

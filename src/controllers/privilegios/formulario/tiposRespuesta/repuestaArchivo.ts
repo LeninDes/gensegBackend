@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/repuestaArchivo'
 // Crear RespuestaArchivo
 export const createRespuestaArchivo = async (req: Request, res: Response): Promise<void> => {
-    const { idresfile, resFile } = req.body;
+    const { idres,idp,resFile } = req.body;
     try {
         const respuestaArchivo = await prisma.create({
-            data: { idresfile, resFile },
+            data: { idres:idres, resFile:resFile, idp:idp },
         });
         res.status(201).json({ respuestaArchivo });
     } catch (error: any) {
@@ -30,7 +30,7 @@ export const updateRespuestaArchivo = async (req: Request, res: Response): Promi
     try {
         const respuestaArchivo = await prisma.update({
             where: { idresfile: parseInt(id, 10) },
-            data: { resFile },
+            data: { resFile:resFile },
         });
         res.status(200).json({ respuestaArchivo });
     } catch (error: any) {

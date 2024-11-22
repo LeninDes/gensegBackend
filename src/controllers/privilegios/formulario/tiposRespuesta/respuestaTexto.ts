@@ -3,10 +3,10 @@ import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/res
 // Crear ResOU
 // Crear RespuestaTexto
 export const createRespuestaTexto = async (req: Request, res: Response): Promise<void> => {
-    const { idres, texto } = req.body;
+    const { resTxt,idp,idres,  } = req.body;
     try {
         const respuestaTexto = await prisma.create({
-            data: { idres, texto },
+            data: { resTxt:resTxt,idres:idres,idp:idp },
         });
         res.status(201).json({ respuestaTexto });
     } catch (error: any) {
@@ -30,8 +30,8 @@ export const updateRespuestaTexto = async (req: Request, res: Response): Promise
     const { texto } = req.body;
     try {
         const respuestaTexto = await prisma.update({
-            where: { id: parseInt(id, 10) },
-            data: { texto },
+            where: { idrestxt: parseInt(id, 10) },
+            data: { resTxt:texto },
         });
         res.status(200).json({ respuestaTexto });
     } catch (error: any) {
@@ -44,7 +44,7 @@ export const deleteRespuestaTexto = async (req: Request, res: Response): Promise
     const { id } = req.params;
     try {
         await prisma.delete({
-            where: { id: parseInt(id, 10) },
+            where: { idrestxt: parseInt(id, 10) },
         });
         res.status(200).json({ message: "Respuesta texto eliminada correctamente" });
     } catch (error: any) {
