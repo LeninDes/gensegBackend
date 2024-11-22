@@ -105,7 +105,7 @@ export const getRoleswithDNI = async (req: Request, res: Response): Promise<void
     try {
         const { dni } = req.params;
         const getRoles = await prisma.usuario.findMany({
-            where: { dni: dni }  
+            where: { dni: dni, estado: true }  
         });
         
         res.status(200).json(getRoles);

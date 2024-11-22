@@ -1,0 +1,134 @@
+import { Request, Response } from "express";
+//import prismaAux from '../../models/privilegios/permisos';
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export const createForm = async (req: Request, res: Response): Promise<void> => {
+    const { name, abrev } = req.body;
+    if (!name) {
+        res.status(400).json({ error: "El nombre del formulario es obligatorio." });
+      }
+  
+      try {
+        const newForm = await prisma.form.create({
+          data: {
+            nmForm:name,
+            abre: abrev,
+          },
+        });
+        res.status(201).json(newForm);
+      } catch (error) {
+        console.error("Error creando formulario:", error);
+        res.status(500).json({ error: "Error interno del servidor." });
+      } 
+};
+
+export const getAllForms = async (req: Request, res: Response): Promise<void> => {
+    try{
+            // Consultamos todas las subunidades en la base de datos
+            const forms = await prisma.form.findMany();
+
+            // Si no hay subunidades, devolvemos un mensaje
+            if (!forms || forms.length === 0) {
+                res.status(404).json({
+                    message: 'No se encontraron formularios',
+                });
+            }
+    
+            // Enviamos las subunidades encontradas
+            res.status(200).json(forms);
+        } catch (error: any) {
+            console.error(error);
+            res.status(500).json({
+                message: 'Hubo un error al obtener las subunidades',
+                error: error.message,
+            });
+        }
+
+}
+export const deleteForm = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
+    console.log(id);
+    try {
+        // Validar que se proporciona el ID
+        if (!id) {
+            res.status(400).json({ message: 'El ID del Formulario es obligatorio' });
+        }
+        // Convertir el ID a número (si es necesario)
+        const formId = parseInt(id);
+
+        // Verificar que el registro existe
+        const existingForm = await prisma.form.findUnique({
+            where: { idf: formId },
+        });
+
+        // Manejo si `existingSubUnidad` es null
+        if (!existingForm) {
+            res.status(404).json({ message: 'Formulario no encontrada' });
+        }
+
+        // Eliminar la subunidad
+        await prisma.form.delete({
+            where: { idf: formId },
+        });
+
+        // Enviar respuesta exitosa
+        res.status(200).json({ message: 'Formulario eliminada con éxito' });
+    } catch (error: any) {
+        console.error(error);
+        res.status(500).json({
+            message: 'Hubo un error al eliminar el formulario',
+            error: error.message,
+        });
+    }
+
+}
+
+export const updateForm = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
+    const { name , abrev} = req.body; //
+
+    try {
+        // Validar que se proporciona el ID
+        if (!id) {
+            res.status(400).json({ message: 'El ID del formulario es obligatorio' });
+        }
+
+        // Validar que se proporciona al menos un campo para actualizar
+        if (!name && !abrev) {
+            res.status(400).json({ message: 'Debe proporcionar al menos un campo para actualizar' });
+        }
+
+        // Convertir el ID a número (si es necesario)
+        const formId = parseInt(id, 10);
+
+        // Verificar que el registro existe
+        const existingForm = await prisma.form.findUnique({
+            where: { idf: formId },
+        });
+
+        if (!existingForm) {
+            res.status(404).json({ message: 'Formulario no encontrado' });
+        }
+
+        // Actualizar la subunidad
+        const updatedSubUnidad = await prisma.form.update({
+            where: { idf: formId },
+            data: {
+                nmForm: name,
+                abre: abrev,
+            },
+        });
+
+        // Enviar respuesta exitosa
+        res.status(200).json({ subUnidad: updatedSubUnidad });
+    } catch (error: any) {
+        console.error(error);
+        res.status(500).json({
+            message: 'Hubo un error al actualizar la subunidad',
+            error: error.message,
+        });
+    }
+
+}

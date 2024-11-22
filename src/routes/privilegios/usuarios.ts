@@ -1,5 +1,5 @@
 import express from 'express'
-import { createUser,loginUser, AllUser } from '../../controllers/privilegios/usuarios';
+import { createUser,loginUser, AllUser, getUserwithDNI } from '../../controllers/privilegios/usuarios';
 
 const   router = express.Router();
 
@@ -7,4 +7,6 @@ const   router = express.Router();
 router.post('/register', createUser);  // Registrar usuario
 router.post('/login', loginUser);  // Iniciar sesión
 router.get('/user', AllUser);
+router.get('/user/:dni',getUserwithDNI);
+
 export default router;
