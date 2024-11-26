@@ -79,6 +79,7 @@ model Prg {
   idp       Int @id @default(autoincrement())
   nmPrg     String
   idf       Int
+  type      String
   form      Form  @relation(fields: [idf], references: [idf])
   opcmul    OpcMul[]
   opcuni    OpcUni[]

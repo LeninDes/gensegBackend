@@ -35,6 +35,33 @@ export const getAllDePermisos = async (req: Request, res: Response): Promise<voi
     }
 };
 
+// Obtener todos los detalles de permiso de un usuario
+export const getAllPermisosToUser = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params; // Obtener el ID desde los parámetros de la solicitud
+
+    try {
+        const dePermisos = await prisma.findMany({
+            where: {
+                id_per: Number(id), // Asegúrate de convertir id_per a número si es necesario
+            },
+            include: {
+                permisos: true,
+                roles: true,
+            },
+        });
+
+        if (dePermisos.length === 0) {
+            res.status(404).json({ message: `No se encontraron detalles de permisos para el id_per: ${id}` });
+            return;
+        }
+
+        res.status(200).json(dePermisos);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener los detalles de los permisos' });
+    }
+};
+
 // Actualizar un detalle de permiso por su ID
 export const updateDePermiso = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;

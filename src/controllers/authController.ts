@@ -71,6 +71,7 @@ export const login = async(req: Request, res: Response): Promise<void> => {
             res.status(400).json({
                 message: 'El uusario es obligatorio'
             })
+            return;
         }
         
         //VALIDAR EL PASSWORD
@@ -78,6 +79,7 @@ export const login = async(req: Request, res: Response): Promise<void> => {
             res.status(400).json({
                 message: 'La contrasenia es obligaroria'
             })
+            return;
         }
 
         const user = await prisma.findUnique({where: {usuario}})
@@ -85,7 +87,7 @@ export const login = async(req: Request, res: Response): Promise<void> => {
         // Comprobamos si el usuario existe
         if(!user){
             res.status(404).json({error: 'Usuario no encontrado'});
-            return 
+            return;
         }
 
         // Comparamos las password
@@ -94,10 +96,12 @@ export const login = async(req: Request, res: Response): Promise<void> => {
             res.status(401).json({
                 error: 'Usuario y contrasenias no coinciden'
             })
+            return;
         }
 
         const token = generateToken(user)
         res.status(201).json({token})
+        return;
         
     } catch (error: any) {
         console.log('Error: ' + error)
