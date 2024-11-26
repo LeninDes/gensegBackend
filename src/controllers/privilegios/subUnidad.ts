@@ -1,15 +1,13 @@
 import { Request, Response } from "express";
 import prisma from '../../models/privilegios/subUnidad';
 
-/* REGISTRO DEl SISTEMA */
+/*---------- CREAR UNA NUEVA SUB UNIDAD ----------*/
 export const newSubUnidad = async (req: Request, res: Response): Promise<void> => {
     const {nombre, abreviatura} = req.body;
     try {
         // VALIDAMOS EL PASSWORD Y USUARIO
         if(!nombre) throw new Error('El nombre de la subunidad es obligatorio');
         //if(!usuario) throw new Error('El usuario es obligatorio');
-
-
         const subUnidad = await prisma.create(
             {
                 data: {
@@ -47,6 +45,8 @@ export const newSubUnidad = async (req: Request, res: Response): Promise<void> =
     }
 }
 
+
+/*---------- OBTENER LAS SUB UNIDADES ----------*/
 export const getAllSubUnidades = async (req: Request, res: Response): Promise<void> => {
     try {
         // Consultamos todas las subunidades en la base de datos
@@ -70,6 +70,7 @@ export const getAllSubUnidades = async (req: Request, res: Response): Promise<vo
     }
 };
 
+/*---------- ACTULIZAR UNA SUB UNIDAD ----------*/
 export const updateSubUnidad = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
     const { nombre, abreviatura } = req.body;
@@ -117,6 +118,8 @@ export const updateSubUnidad = async (req: Request, res: Response): Promise<void
     }
 };
 
+
+/*---------- ELIMINAR UNA SUBUNIDAD ----------*/
 export const deleteSubUnidad = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
     console.log(id);

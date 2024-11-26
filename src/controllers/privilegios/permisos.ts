@@ -4,6 +4,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+
+/*---------- CREAR PERMISOS DE PERMISOS ----------*/
 // Crear un nuevo permiso y automáticamente crear en detalles de permisos para cada rol existente
 export const createPermisoWithDePermisos = async (req: Request, res: Response): Promise<void> => {
     const { n_per, abrev } = req.body;
@@ -42,6 +44,8 @@ export const createPermisoWithDePermisos = async (req: Request, res: Response): 
     }
 };
 
+
+/*---------- ACTUALIZAR LOS PERSMINOS -----------*/
 export const updatePermisoWithDePermisos = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // id del permiso a actualizar
     const { n_per, abrev } = req.body;
@@ -70,6 +74,7 @@ export const updatePermisoWithDePermisos = async (req: Request, res: Response): 
     }
 };
 
+/*---------- ELIMINAR LAS SUB UNIDADES ----------*/
 export const deletePermisoWithDePermisos = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // id del permiso a eliminar
 
@@ -101,7 +106,7 @@ export const deletePermisoWithDePermisos = async (req: Request, res: Response): 
 };
 
 
-
+/*---------- CREAR PERMISOS ----------*/
 export const createPermiso = async (req: Request, res: Response): Promise<void> => {
     const { n_per, abrev } = req.body;
     try {
@@ -118,7 +123,7 @@ export const createPermiso = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// Obtener todos los permisos
+/*---------- OBTENER TOODOS LOS PERMISOS ----------*/
 export const getAllPermisos = async (req: Request, res: Response): Promise<void> => {
     try {
         const permisos = await prisma.permiso.findMany();
@@ -129,7 +134,7 @@ export const getAllPermisos = async (req: Request, res: Response): Promise<void>
     }
 };
 
-// Actualizar un permiso por su ID
+/*---------- ACTUALIZAR LOS PERMISOS ----------*/
 export const updatePermiso = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { n_per, abrev } = req.body;
@@ -157,7 +162,7 @@ export const updatePermiso = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// Eliminar un permiso por su ID
+/*---------- ELIMINAR PERMISOS POR SU ID ----------*/
 export const deletePermiso = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {

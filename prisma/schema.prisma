@@ -44,7 +44,12 @@ model DetallePermiso {
   permisos  Permiso @relation(fields: [id_per], references: [id_per])
   roles     Rol @relation(fields: [id_rol], references: [id_rol])
 }
-
+model Sub_unidad {
+  id_subuni Int @id @default(autoincrement())
+  n_subuni  String
+  abreviatura     String
+  usuarios     Usuario[]
+}
 model Usuario {
   dni                   String @db.Char(8)
   n_usu                 String  
@@ -57,12 +62,7 @@ model Usuario {
   sub_uni   Sub_unidad  @relation(fields: [subunidad_id_subuni], references: [id_subuni])
 }
 
-model Sub_unidad {
-  id_subuni Int @id @default(autoincrement())
-  n_subuni  String
-  abreviatura     String
-  usuarios     Usuario[]
-}
+
 
 model Form {
   idf       Int @id @default(autoincrement())

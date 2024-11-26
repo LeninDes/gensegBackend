@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+
+/*---------- CREAR UN NUEVO ROL DE PERMISOS ----------*/
 export const createRoleWithDePermisos = async (req: Request, res: Response): Promise<void> => {
     const { n_rol, abrev } = req.body;
     
@@ -41,6 +43,7 @@ export const createRoleWithDePermisos = async (req: Request, res: Response): Pro
     }
 };
 
+/*---------- ELIMINAR UN NUEVO ROL DE PERMISOS ----------*/
 export const deleteRoleWithDePermisos = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
@@ -72,7 +75,7 @@ export const deleteRoleWithDePermisos = async (req: Request, res: Response): Pro
 };
 
 
-// Crear un nuevo rol
+/*---------- CREAR UN NUEVO ROL----------*/
 export const createRol = async (req: Request, res: Response): Promise<void> => {
     const { n_rol, abrev } = req.body;
     try {
@@ -89,7 +92,7 @@ export const createRol = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Obtener todos los roles
+/*---------- OBTENER ROLES----------*/
 export const getAllRoles = async (req: Request, res: Response): Promise<void> => {
     try {
         const roles = await prisma.rol.findMany();
@@ -115,7 +118,7 @@ export const getRoleswithDNI = async (req: Request, res: Response): Promise<void
     }
 };
 
-// Actualizar un rol por su ID
+/*---------- ACTULIZAR ROL POR ID----------*/
 export const updateRol = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { n_rol, abrev } = req.body;
@@ -143,7 +146,7 @@ export const updateRol = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Eliminar un rol por su ID
+/*---------- ELIMINAR ROL POR SU ID ----------*/
 export const deleteRol = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
