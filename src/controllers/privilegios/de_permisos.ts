@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prisma from '../../models/privilegios/de_permisos';
 
-// Crear un nuevo detalle de permiso
+/*---------- CREAR PERMISO -------*/
 export const createDePermiso = async (req: Request, res: Response): Promise<void> => {
     const { id_rol, id_per, estado } = req.body;
     try {
@@ -19,7 +19,7 @@ export const createDePermiso = async (req: Request, res: Response): Promise<void
     }
 };
 
-// Obtener todos los detalles de permiso
+/*---------- OBTENER DETALLES PERMISO -------*/
 export const getAllDePermisos = async (req: Request, res: Response): Promise<void> => {
     try {
         const dePermisos = await prisma.findMany({
@@ -62,7 +62,7 @@ export const getAllPermisosToUser = async (req: Request, res: Response): Promise
     }
 };
 
-// Actualizar un detalle de permiso por su ID
+/*---------- ADTULIZAR DETALLE DE PERMISO POR ID ---------*/
 export const updateDePermiso = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { id_rol, id_per, estado } = req.body;
@@ -91,7 +91,7 @@ export const updateDePermiso = async (req: Request, res: Response): Promise<void
     }
 };
 
-// Eliminar un detalle de permiso por su ID
+/*---------- ELIMINAR DETALLE PERMISO POR ID -------*/
 export const deleteDePermiso = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {

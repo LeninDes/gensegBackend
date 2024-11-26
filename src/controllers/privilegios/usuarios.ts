@@ -1,16 +1,16 @@
 import { Request, Response } from "express";
 //import bcrypt from 'bcryptjs';
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-//import prisma from '../prisma';  // Asegúrate de usar el cliente Prisma adecuado
-import dotenv from "dotenv";
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 dotenv.config();
 
-const SECRET_KEY = process.env.JWT_SECRET || "secretKey"; // Define una secret key
+const SECRET_KEY = process.env.JWT_SECRET || 'secretKey';  // Define una secret 
 
+/*---------- METODO LOGIN -------*/
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { usuario, password } = req.body; // Se cambia dni a usuario
@@ -125,11 +125,9 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const createUser = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { dni, usuario, password, rol_id, id_sub } = req.body;
+/*---------- CREAR USUARIO -------*/
+export const createUser = async (req: Request, res: Response): Promise<void> => {
+    const { dni, usuario, password, rol_id, id_sub } = req.body;
 
   try {
     // Verificar si el usuario con la misma combinación de dni, rol_id, id_sub ya existe
@@ -227,6 +225,56 @@ export const getUserwithDNI = async (
     res.status(500).json({ message: "Error al obtener los roles" });
   }
 };
+export const toggleUserState = async (req: Request, res: Response): Promise<void> => {
+  const { dni, rol_id, subunidad_id_subuni, estado } = req.body; // Desestructurar todos los campos necesarios.
+
+  // Validar datos básicos
+  if (!dni || rol_id === undefined || subunidad_id_subuni === undefined || estado === undefined) {
+    res.status(400).json({ message: 'Parámetros incompletos: dni, rol_id, subunidad_id_subuni o estado faltan.' });
+    return;
+  }
+
+  try {
+    // Verificar si el usuario existe
+    const existingUser = await prisma.usuario.findUnique({
+      where: {
+        dni_rol_id_subunidad_id_subuni: { // Prisma utiliza este formato para claves primarias compuestas
+          dni,
+          rol_id,
+          subunidad_id_subuni,
+        },
+      },
+    });
+
+    if (!existingUser) {
+      res.status(404).json({ message: 'Usuario no encontrado' });
+      return;
+    }
+
+    // Actualizar el estado del usuario
+    const updatedUser = await prisma.usuario.update({
+      where: {
+        dni_rol_id_subunidad_id_subuni: {
+          dni,
+          rol_id,
+          subunidad_id_subuni,
+        },
+      },
+      data: { estado },
+    });
+
+    // Responder con los datos actualizados
+    res.status(200).json({
+      message: 'Estado del usuario actualizado correctamente.',
+      updatedUser,
+    });
+  } catch (error) {
+    console.error('Error al actualizar el estado del usuario:', error);
+    res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+};
+
+
 
 /* 
 
