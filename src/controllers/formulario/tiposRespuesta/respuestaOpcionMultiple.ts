@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/respuestaOpcionMultiple'
+//import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/respuestaOpcionMultiple'
+import prisma from '../../../models/privilegios/formulario/tiposRespuesta/respuestaOpcionMultiple'
 // Crear ResOM
 export const createResOM = async (req: Request, res: Response): Promise<void> => {
     const { idres, idp, idomul } = req.body;

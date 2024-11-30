@@ -1,6 +1,6 @@
 import express from 'express'
-//import { createRes,deleteRes,getAllRes,updateRes } from '../../../controllers/privilegios/formulario/respuestas';
-import { createRes,deleteRes,getAllRes,updateRes } from '../../../controllers/formulario/respuestas';
+//import { createRes,deleteRes,getAllRes,updateRes } from '../../controllers/privilegios/formulario/respuestas';
+import { createRes,deleteRes,getAllRes,updateRes } from '../../controllers/formulario/respuestas';
 
 const router = express.Router();
 

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import prisma from '../../../../models/privilegios/formulario/tiposPregunta/opcionDesplegable'
+//import prisma from '../../../../models/privilegios/formulario/tiposPregunta/opcionDesplegable'
+import prisma from '../../../models/privilegios/formulario/tiposPregunta/opcionDesplegable'
 // Crear OpcDes
 export const createOpcDes = async (req: Request, res: Response): Promise<void> => {
     const { idp, txtOpc } = req.body;

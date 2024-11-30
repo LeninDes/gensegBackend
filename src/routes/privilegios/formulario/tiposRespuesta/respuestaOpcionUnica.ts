@@ -1,5 +1,6 @@
 import express from 'express'
-import { createResOU,deleteResOU,getAllResOU,updateResOU } from '../../../../controllers/privilegios/formulario/tiposRespuesta/respuestaOpcionUnica';
+//import { createResOU,deleteResOU,getAllResOU,updateResOU } from '../../../../controllers/privilegios/formulario/tiposRespuesta/respuestaOpcionUnica';
+import { createResOU,deleteResOU,getAllResOU,updateResOU } from '../../../../controllers/formulario/tiposRespuesta/respuestaOpcionUnica';
 
 const router = express.Router();
 

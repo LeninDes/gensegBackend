@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/respuestaFecha'
+//import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/respuestaFecha'
+import prisma from '../../../models/privilegios/formulario/tiposRespuesta/respuestaFecha'
 // Crear RespuestaArchivo
 
 // Crear RespuestaFecha

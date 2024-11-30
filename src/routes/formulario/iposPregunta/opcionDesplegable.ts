@@ -1,6 +1,5 @@
 import express from 'express'
-//import { createOpcDes,deleteOpcDes,getAllOpcDes,updateOpcDes } from '../../../../controllers/privilegios/formulario/iposPregunta/opcionDesplegable';
-import { createOpcDes,deleteOpcDes,getAllOpcDes,updateOpcDes } from '../../../../controllers/formulario/iposPregunta/opcionDesplegable';
+import { createOpcDes,deleteOpcDes,getAllOpcDes,updateOpcDes } from '../../../controllers/formulario/iposPregunta/opcionDesplegable';
 
 const router = express.Router();
 

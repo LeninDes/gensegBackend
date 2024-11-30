@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/respuestaOpcionDesplegable'
+//import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/respuestaOpcionDesplegable'
+import prisma from '../../../models/privilegios/formulario/tiposRespuesta/respuestaOpcionDesplegable'
 // Crear ResOM
 export const createResOD = async (req: Request, res: Response): Promise<void> => {
     const { idres, idp, idodes } = req.body;

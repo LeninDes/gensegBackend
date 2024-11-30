@@ -1,6 +1,5 @@
 import express from 'express'
-//import { createOpcUni,deleteOpcUni,getAllOpcUni,updateOpcUni } from '../../../../controllers/privilegios/formulario/iposPregunta/opcionUnica';
-import { createOpcUni,deleteOpcUni,getAllOpcUni,updateOpcUni } from '../../../../controllers/formulario/iposPregunta/opcionUnica';
+import { createOpcUni,deleteOpcUni,getAllOpcUni,updateOpcUni } from '../../../controllers/formulario/iposPregunta/opcionUnica';
 
 const router = express.Router();
 

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/repuestaArchivo'
+//import prisma from '../../../../models/privilegios/formulario/tiposRespuesta/repuestaArchivo'
+import prisma from '../../../models/privilegios/formulario/tiposRespuesta/repuestaArchivo'
 // Crear RespuestaArchivo
 export const createRespuestaArchivo = async (req: Request, res: Response): Promise<void> => {
     const { idres,idp,resFile } = req.body;

@@ -1,5 +1,6 @@
 import express from 'express'
-import {createForm, getAllForms, updateForm,deleteForm } from '../../controllers/formulario/formulario';
+//import {createForm, getAllForms, updateForm,deleteForm } from '../../controllers/formulario/formulario';
+import {createForm, getAllForms, updateForm,deleteForm } from '../../controllers/formulario1/formulario';
 
 const router = express.Router();
 

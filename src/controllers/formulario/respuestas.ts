@@ -1,10 +1,13 @@
 import { Request, Response } from "express";
-import prisma from '../../../models/privilegios/formulario/respuestas'
+
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export const createRes = async (req: Request, res: Response): Promise<void> => {
     const { dni, idf } = req.body;
     try {
-        const result = await prisma.create({
+        const result = await prisma.res.create({
             data: { 
                 dni:dni,
                 idf: idf },
@@ -17,7 +20,7 @@ export const createRes = async (req: Request, res: Response): Promise<void> => {
 
 export const getAllRes = async (_req: Request, res: Response): Promise<void> => {
     try {
-        const results = await prisma.findMany();
+        const results = await prisma.res.findMany();
         res.status(200).json(results);
     } catch (error: any) {
         res.status(500).json({ error: "Error al obtener las respuestas", details: error.message });
@@ -28,7 +31,7 @@ export const updateRes = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { dni } = req.body;
     try {
-        const result = await prisma.update({
+        const result = await prisma.res.update({
             where: { idres: parseInt(id, 10) },
             data: { dni:dni },
         });
@@ -41,7 +44,7 @@ export const updateRes = async (req: Request, res: Response): Promise<void> => {
 export const deleteRes = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
-        await prisma.delete({
+        await prisma.res.delete({
             where: { idres: parseInt(id, 10) },
         });
         res.status(200).json({ message: "Respuesta eliminada" });

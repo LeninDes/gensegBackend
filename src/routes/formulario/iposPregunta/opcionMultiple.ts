@@ -1,6 +1,5 @@
 import express from 'express'
-//import { createOpcMul,deleteOpcMul,getAllOpcMul,updateOpcMul } from '../../../../controllers/privilegios/formulario/iposPregunta/opcionMultiple';
-import { createOpcMul,deleteOpcMul,getAllOpcMul,updateOpcMul } from '../../../../controllers/formulario/iposPregunta/opcionMultiple';
+import { createOpcMul,deleteOpcMul,getAllOpcMul,updateOpcMul } from '../../../controllers/formulario/iposPregunta/opcionMultiple';
 
 const router = express.Router();
 

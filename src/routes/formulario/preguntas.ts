@@ -1,6 +1,5 @@
 import express from 'express'
-//import { createPrg,deletePrg,getAllPrgs,updatePrg } from '../../../controllers/privilegios/formulario/preguntas';
-import { createPrg,deletePrg,getAllPrgs,updatePrg } from '../../../controllers/formulario/preguntas';
+import { createPrg,deletePrg,getAllPrgs,updatePrg } from '../../controllers/formulario/preguntas';
 
 const router = express.Router();
 

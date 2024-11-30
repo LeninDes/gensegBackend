@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import prisma from '../../../../models/privilegios/formulario/tiposPregunta/opcionMultiple'
+//mport prisma from '../../../../models/privilegios/formulario/tiposPregunta/opcionMultiple'
+import prisma from '../../../models/privilegios/formulario/tiposPregunta/opcionMultiple'
 
 // Crear OpcMul
 export const createOpcMul = async (req: Request, res: Response): Promise<void> => {

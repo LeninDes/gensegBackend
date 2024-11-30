@@ -1,5 +1,6 @@
 import express from 'express'
-import { createRespuestaFecha,deleteRespuestaFecha,getAllRespuestaFecha,updateRespuestaFecha } from '../../../../controllers/privilegios/formulario/tiposRespuesta/respuestaFecha';
+//import { createRespuestaFecha,deleteRespuestaFecha,getAllRespuestaFecha,updateRespuestaFecha } from '../../../../controllers/privilegios/formulario/tiposRespuesta/respuestaFecha';
+import { createRespuestaFecha,deleteRespuestaFecha,getAllRespuestaFecha,updateRespuestaFecha } from '../../../../controllers/formulario/tiposRespuesta/respuestaFecha';
 
 const router = express.Router();
 

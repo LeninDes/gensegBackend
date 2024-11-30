@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import prisma from '../../../../models/privilegios/formulario/tiposPregunta/opcionUnica'
+//import prisma from '../../../../models/privilegios/formulario/tiposPregunta/opcionUnica'
+import prisma from '../../../models/privilegios/formulario/tiposPregunta/opcionUnica'
 
 // Crear OpcUni
 export const createOpcUni = async (req: Request, res: Response): Promise<void> => {

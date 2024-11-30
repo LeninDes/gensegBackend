@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import prisma from '../../../models/privilegios/formulario/preguntas'
+//import prisma from '../../../models/privilegios/formulario/preguntas'
+import prisma from '../../models/privilegios/formulario/preguntas'
 
 export const createPrg = async (req: Request, res: Response): Promise<void> => {
     const { nmPrg, idf } = req.body;

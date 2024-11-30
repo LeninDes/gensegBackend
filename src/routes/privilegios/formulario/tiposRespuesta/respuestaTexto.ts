@@ -1,5 +1,6 @@
 import express from 'express'
-import { createRespuestaTexto,deleteRespuestaTexto,getAllRespuestaTexto,updateRespuestaTexto } from '../../../../controllers/privilegios/formulario/tiposRespuesta/respuestaTexto';
+//import { createRespuestaTexto,deleteRespuestaTexto,getAllRespuestaTexto,updateRespuestaTexto } from '../../../../controllers/privilegios/formulario/tiposRespuesta/respuestaTexto';
+import { createRespuestaTexto,deleteRespuestaTexto,getAllRespuestaTexto,updateRespuestaTexto } from '../../../../controllers/formulario/tiposRespuesta/respuestaTexto';
 
 const router = express.Router();
 

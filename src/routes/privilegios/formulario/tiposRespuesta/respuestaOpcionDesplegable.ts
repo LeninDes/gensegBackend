@@ -1,5 +1,6 @@
 import express from 'express'
-import { createResOD,deleteResOD,getAllResOD,updateResOD } from '../../../../controllers/privilegios/formulario/tiposRespuesta/respuestaOpcionDesplegable';
+//import { createResOD,deleteResOD,getAllResOD,updateResOD } from '../../../../controllers/privilegios/formulario/tiposRespuesta/respuestaOpcionDesplegable';
+import { createResOD,deleteResOD,getAllResOD,updateResOD } from '../../../../controllers/formulario/tiposRespuesta/respuestaOpcionDesplegable';
 
 const router = express.Router();
 
