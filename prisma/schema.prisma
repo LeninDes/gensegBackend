@@ -23,7 +23,7 @@ model User {
 // TABLA DE ROLES
 model Rol {
   id_rol      Int     @id     @default(autoincrement())
-  n_rol       String
+  n_rol       String  @unique
   abrev       String
   datellePermisos   DetallePermiso[]
   usuarios          Usuario[]
@@ -31,7 +31,7 @@ model Rol {
 
 model Permiso {
   id_per            Int     @id     @default(autoincrement())
-  n_per             String
+  n_per             String  @unique
   abreviatura       String?
   datellePermisos    DetallePermiso[]
 }
@@ -46,13 +46,13 @@ model DetallePermiso {
 }
 model Sub_unidad {
   id_subuni Int @id @default(autoincrement())
-  n_subuni  String
+  n_subuni  String  @unique
   abreviatura     String
   usuarios     Usuario[]
 }
 model Usuario {
   dni                   String @db.Char(8)
-  n_usu                 String  
+  n_usu                 String 
   estado                Boolean @default(true)
   password              String
   rol_id                Int   
@@ -60,13 +60,14 @@ model Usuario {
   @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta
   rol       Rol         @relation(fields: [rol_id], references: [id_rol])
   sub_uni   Sub_unidad  @relation(fields: [subunidad_id_subuni], references: [id_subuni])
+  proyectos             Project[]
 }
 
 
 
 model Form {
   idf       Int @id @default(autoincrement())
-  nmForm    String 
+  nmForm    String  @unique
   estado    Boolean @default(false)
   abre      String?
   Fcreate   DateTime  @default(now())
@@ -77,7 +78,7 @@ model Form {
 
 model Prg {
   idp       Int @id @default(autoincrement())
-  nmPrg     String
+  nmPrg     String  @unique
   idf       Int
   type      String
   form      Form  @relation(fields: [idf], references: [idf])
@@ -104,6 +105,7 @@ model Res {
   restxt    ResTxt[]
   resfile   ResFile[]
   resdate   ResDate[]
+  actividad Actividad[]
 }
 
 model OpcMul {
@@ -185,4 +187,34 @@ model ResDate {
   resdate     String
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
+}
+
+enum EstadoProyecto {
+  PENDIENTE
+  ARCHIVADO
+  ENCURSO
+  COMPLETADO
+}
+
+model Project {
+  idproj                Int     @id   @default(autoincrement())
+  plan                  String  
+  estado                String
+  dni                   String
+  id_rol                Int
+  subunidad_id_subuni   Int
+  usuario               Usuario @relation(fields: [dni, id_rol, subunidad_id_subuni], references: [dni, rol_id, subunidad_id_subuni])  
+  actividad             Actividad[]
+}
+
+model Actividad {
+  idActivi              Int     @id   @default(autoincrement())
+  name                  String  @unique
+  fInit                 DateTime
+  fFin                  DateTime
+  estado                String
+  idproj                Int
+  idres                 Int
+  project               Project   @relation(fields: [idproj], references: [idproj])
+  res                   Res       @relation(fields: [idres], references: [idres])
 }

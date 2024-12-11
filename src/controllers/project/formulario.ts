@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-//import prismaAux from '../../models/privilegios/permisos';
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -118,6 +117,7 @@ export const updateForm = async (req: Request, res: Response): Promise<void> => 
             data: {
                 nmForm: name,
                 abre: abrev,
+                Fupdate: new Date(),
             },
         });
 
