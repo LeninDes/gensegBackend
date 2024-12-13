@@ -78,7 +78,7 @@ model Form {
 
 model Prg {
   idp       Int @id @default(autoincrement())
-  nmPrg     String  @unique
+  nmPrg     String  
   idf       Int
   type      String
   form      Form  @relation(fields: [idf], references: [idf])
@@ -96,7 +96,6 @@ model Prg {
 model Res {
   idres     Int @id @default(autoincrement())
   idf       Int
-  dni       String
   date      DateTime  @default(now())
   form      Form  @relation(fields: [idf], references: [idf])
   resom     ResOM[]

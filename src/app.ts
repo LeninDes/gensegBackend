@@ -15,6 +15,8 @@ import De_permisos from './routes/privilegios/de_permisos'
 import Usuarios from './routes/privilegios/usuarios'
 import Form from './routes/project/form'
 import Preguntas from './routes/project/preguntas/pregunta'
+import Project from './routes/project/project'
+import Actividad from './routes/project/actividades'
 //--------------
 // APP CON EXPRESS
 const app = express()
@@ -32,6 +34,8 @@ app.use('/api', De_permisos);
 app.use('/api/auth', Usuarios);
 app.use('/api', Form);
 app.use('/api/form', Preguntas);
+app.use('/api/', Project);
+app.use('/api/', Actividad);
 
 
 export default app;

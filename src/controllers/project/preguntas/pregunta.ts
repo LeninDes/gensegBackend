@@ -3,26 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export const createQuestion = async (req: Request, res: Response): Promise<void> => {
-    const {idf, name, tipo } = req.body;
-
-    try {
-        
-        const newQuestion = await prisma.prg.create({
-            data: {
-                idf: Number(idf),
-                nmPrg: name,
-                type: tipo,
-            },
-        });
-        res.status(201).json({ message: 'Pregunta creada con éxito', question: newQuestion });
-    } catch (error:any) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al crear la pregunta', error: error.message });
-    }
-};
-
-export const getQuestionsByForm = async (req: Request, res: Response): Promise<void> => {
+export const getQuestionsByFormUni = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
     try {
@@ -34,6 +15,7 @@ export const getQuestionsByForm = async (req: Request, res: Response): Promise<v
                 opcdes: true,
             },
         });
+        console.log(questions);
         res.status(200).json({ questions });
     } catch (error:any) {
         console.error(error);
@@ -41,41 +23,9 @@ export const getQuestionsByForm = async (req: Request, res: Response): Promise<v
     }
 };
 
-export const addOptions = async (req: Request, res: Response): Promise<void> => {
-    const { idp, options, type } = req.body;
-
-    try {
-        if (type === 'multiple') {
-            await prisma.opcMul.createMany({
-                data: options.map((txtOpc: string) => ({ idp, txtOpc })),
-            });
-        } else if (type === 'unique') {
-            await prisma.opcUni.createMany({
-                data: options.map((txtOpc: string) => ({ idp, txtOpc })),
-            });
-        } else if (type === 'descriptive') {
-            await prisma.opcDes.createMany({
-                data: options.map((txtOpc: string) => ({ idp, txtOpc })),
-            });
-        } else {
-            res.status(400).json({ message: 'Tipo de pregunta no válido' });
-            return;
-        }
-
-        res.status(201).json({ message: 'Opciones añadidas con éxito' });
-    } catch (error:any) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al agregar opciones', error: error.message });
-    }
-};
-
 export const handleDynamicQuestions = async (req: Request, res: Response): Promise<void> => {
     const {idf, questions} = req.body; // El array JSON que envía el frontend
-    console.log(" ----- ");
-    console.log(idf);
-    console.log(" ====== ");
-    console.log(questions);
-    console.log(" --------");
+    
     try {
         // Iterar sobre cada pregunta en el JSON
         for (const question of questions) {
@@ -180,3 +130,122 @@ export const handleDynamicQuestions = async (req: Request, res: Response): Promi
         res.status(500).json({ message: 'Error al procesar las preguntas', error: error.message });
     }
 };
+
+
+export const getQuestionsByForm = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+    try {
+        const questions = await prisma.prg.findMany({
+            where: { idf: Number(id) },
+            include: {
+                opcmul: true, // Incluye opciones de preguntas de tipo 'multipleChoice'
+                opcuni: true, // Incluye opciones de preguntas de tipo 'singleChoice'
+                opcdes: true, // Incluye opciones de preguntas de tipo 'dropdown'
+            },
+        });
+
+        // Transformar las preguntas en un formato legible
+        const formattedQuestions = questions.map((question) => {
+            const { idp, type, nmPrg, opcmul, opcuni, opcdes } = question;
+
+            if (type === "multipleChoice") {
+                return {
+                    id: idp,
+                    type,
+                    questionText: nmPrg,
+                    options: opcmul.map((option) => option.txtOpc),
+                };
+            }
+
+            if (type === "singleChoice") {
+                return {
+                    id: idp,
+                    type,
+                    questionText: nmPrg,
+                    options: opcuni.map((option) => option.txtOpc),
+                };
+            }
+
+            if (type === "dropdown") {
+                return {
+                    id: idp,
+                    type,
+                    questionText: nmPrg,
+                    options: opcdes.map((option) => option.txtOpc),
+                };
+            }
+
+            return {
+                id: idp,
+                type,
+                questionText: nmPrg,
+            };
+        });
+        res.status(200).json(formattedQuestions);
+    } catch (error: any) {
+        console.error(error);
+        res.status(500).json({ message: "Error al obtener las preguntas", error: error.message });
+    }
+};
+
+export const updateQuestionsByForm = async (req: Request, res: Response) => {
+    const { questions } = req.body; // Recibe el ID del formulario y las preguntas
+    const { id } = req.params;
+    const idfor = Number(id);
+    console.log(questions);
+    if (!idfor || !questions) {
+        return res.status(400).json({ error: 'El ID del formulario y las preguntas son requeridos.' });
+    }
+
+    try {
+        for (const question of questions) {
+            const { id, type, questionText, options } = question;
+
+            // Actualizar o crear la pregunta
+            const updatedQuestion = await prisma.prg.upsert({
+                where: { idp: id || 0 }, // Si no hay ID, se crea una nueva pregunta
+                update: {
+                    type: type,
+                    nmPrg: questionText,
+                },
+                create: {
+                    idf: Number(idfor),
+                    type: type,
+                    nmPrg: questionText,
+                },
+            });
+
+            // Eliminar opciones antiguas dependiendo del tipo
+            if (type === 'multipleChoice') {
+                await prisma.opcMul.deleteMany({ where: { idp: updatedQuestion.idp } });
+            } else if (type === 'singleChoice') {
+                await prisma.opcUni.deleteMany({ where: { idp: updatedQuestion.idp } });
+            } else if (type === 'dropdown') {
+                await prisma.opcDes.deleteMany({ where: { idp: updatedQuestion.idp} });
+            }
+
+            // Crear nuevas opciones
+            if (options && options.length > 0) {
+                const optionsData = options.map((option: string) => ({
+                    idp: updatedQuestion.idp,
+                    txtOpc: option,
+                }));
+
+                if (type === 'multipleChoice') {
+                    await prisma.opcMul.createMany({data: optionsData});
+                } else if (type === 'singleChoice') {
+                    await prisma.opcUni.createMany({ data: optionsData });
+                } else if (type === 'dropdown') {
+                    await prisma.opcDes.createMany({ data: optionsData });
+                }
+            }
+        }
+
+        res.status(200).json({ message: 'Preguntas actualizadas correctamente.' });
+    } catch (error) {
+        console.error('Error al manejar las preguntas dinámicas:', error);
+        res.status(500).json({ error: 'Ocurrió un error al actualizar las preguntas.' });
+    }
+};
+
