@@ -1,11 +1,11 @@
 import express from 'express'
-import {  } from '../../controllers/project/actividad';
+import { createAnswersAndInsertActivity, createActivity } from '../../controllers/project/actividad';
 
 const router = express.Router();
 
 /** RUTAS REGISTRO Y LOGIN */
-router.post('/actividad', );
-router.get('/actividad', );
+router.post('/actividad', createAnswersAndInsertActivity);
+//router.post('/actividad', createAnswersAndInsertActivity);
 router.put('/actividad/:id',);
 router.delete('/actividad/:id',);
 

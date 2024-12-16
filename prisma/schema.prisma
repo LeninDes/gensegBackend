@@ -183,7 +183,7 @@ model ResDate {
   idresdate   Int   @id   @default(autoincrement())
   idres       Int
   idp         Int
-  resdate     String
+  resdate     DateTime  
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
 }
@@ -199,7 +199,9 @@ model Project {
   idproj                Int     @id   @default(autoincrement())
   plan                  String  
   estado                String
+  escuelaProfesional    String
   dni                   String
+  idString              String?
   id_rol                Int
   subunidad_id_subuni   Int
   usuario               Usuario @relation(fields: [dni, id_rol, subunidad_id_subuni], references: [dni, rol_id, subunidad_id_subuni])  
@@ -212,6 +214,7 @@ model Actividad {
   fInit                 DateTime
   fFin                  DateTime
   estado                String
+  idString              String?
   idproj                Int
   idres                 Int
   project               Project   @relation(fields: [idproj], references: [idproj])
