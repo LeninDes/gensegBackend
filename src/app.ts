@@ -27,11 +27,11 @@ app.use(cors());
 
 // RUTAS
 app.use('/auth', authRoutes);
+app.use('/api/auth', Usuarios);
 app.use('/api', subUnidad);
 app.use('/api', Roles);
 app.use('/api', Permisos);
 app.use('/api', De_permisos);
-app.use('/api/auth', Usuarios);
 app.use('/api', Form);
 app.use('/api/form', Preguntas);
 app.use('/api/', Project);

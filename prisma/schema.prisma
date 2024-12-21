@@ -202,6 +202,8 @@ model Project {
   escuelaProfesional    String
   dni                   String
   idString              String?
+  fInit                 DateTime?
+  fFin                  DateTime?
   id_rol                Int
   subunidad_id_subuni   Int
   usuario               Usuario @relation(fields: [dni, id_rol, subunidad_id_subuni], references: [dni, rol_id, subunidad_id_subuni])  

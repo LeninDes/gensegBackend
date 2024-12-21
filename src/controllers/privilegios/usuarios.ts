@@ -3,12 +3,12 @@ import { Request, Response } from "express";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Usuario } from "@prisma/client";
 
 const prisma = new PrismaClient();
 dotenv.config();
 
-const SECRET_KEY = process.env.JWT_SECRET || 'secretKey';  // Define una secret 
+const SECRET_KEY = process.env.JWT_SECRET || 'secret';  // Define una secret 
 
 /*---------- METODO LOGIN -------*/
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
@@ -18,13 +18,14 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const existingUser = await prisma.usuario.findFirst({
       where: { n_usu: usuario }, // Cambiamos a findFirst ya que n_usu no es único
     });
+    console.log(existingUser);
     const users = await prisma.usuario.findMany({
       where: { n_usu: usuario, estado: true },
     });
 
     // Verificar si el usuario existe
     if (!existingUser) {
-      throw("s");
+      throw("saltear");
       res.status(404).json({
         message: "El usuario no existe",
       });
@@ -47,7 +48,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     // Generar un token
     if (existingUser) {
       const token = jwt.sign(
-        { userId: existingUser.dni, role: existingUser.rol_id },
+        { dni: existingUser.dni, n_usu: existingUser.n_usu },
         SECRET_KEY,
         { expiresIn: "1h" } // El token expira en 1 hora
       );
@@ -125,6 +126,8 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+
+
 /*---------- CREAR USUARIO -------*/
 export const createUser = async (req: Request, res: Response): Promise<void> => {
     const { dni, usuario, password, rol_id, id_sub } = req.body;
@@ -191,6 +194,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const AllUser = async (req: Request, res: Response): Promise<void> => {
+  console.log("llega");
   try {
     // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
     const users = await prisma.usuario.findMany({
@@ -275,6 +279,28 @@ export const toggleUserState = async (req: Request, res: Response): Promise<void
 };
 
 
+export const getUser = async (req: Request, res: Response): Promise<void> => {
+
+  const user = req.user as Usuario;
+  console.log("reloj ajustando");
+  const date = new Date();
+  date.setHours(date.getHours() - 5);
+  console.log(date);
+  try {
+    // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
+    const users = await prisma.usuario.findFirst({
+      where: { dni: user.dni, n_usu: user.n_usu },
+      
+    }); 
+
+    // Retornamos los usuarios con las relaciones
+    res.status(200).json({users, access: true});
+  } catch (error) {
+    // Si hay un error, lo manejamos
+    console.error(error);
+    res.status(500).json({ error: "No tienes los privilegios." });
+  }
+};
 
 /* 
 

@@ -8,12 +8,14 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
     if (!name) {
         res.status(400).json({ error: "El nombre del formulario es obligatorio." });
       }
-      
+        const date = new Date();
+        date.setHours(date.getHours() - 5);
       try {
         const newForm = await prisma.form.create({
           data: {
             nmForm:name,
             abre: abrev,
+            Fcreate: date,
           },
         });
         res.status(201).json(newForm);
@@ -110,14 +112,15 @@ export const updateForm = async (req: Request, res: Response): Promise<void> => 
         if (!existingForm) {
             res.status(404).json({ message: 'Formulario no encontrado' });
         }
-
+        const date = new Date();
+        date.setHours(date.getHours() - 5);
         // Actualizar la subunidad
         const updatedSubUnidad = await prisma.form.update({
             where: { idf: formId },
             data: {
                 nmForm: name,
                 abre: abrev,
-                Fupdate: new Date(),
+                Fupdate: date,
             },
         });
 

@@ -125,6 +125,7 @@ export const createPermiso = async (req: Request, res: Response): Promise<void> 
 
 /*---------- OBTENER TOODOS LOS PERMISOS ----------*/
 export const getAllPermisos = async (req: Request, res: Response): Promise<void> => {
+    
     try {
         const permisos = await prisma.permiso.findMany();
         res.status(200).json(permisos);

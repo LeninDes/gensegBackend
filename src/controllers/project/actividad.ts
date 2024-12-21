@@ -85,9 +85,9 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
                             answer.map(async (optionId: number) => {
                                 await prisma.resOM.create({
                                     data: {
-                                        idres: resp.idres,
-                                        idp: question.idp,
-                                        idomul: optionId
+                                        idres: Number(resp.idres),
+                                        idp: Number(question.idp),
+                                        idomul: Number(optionId)
                                     }
                                 });
                             })
@@ -115,9 +115,9 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
                             answer.map(async (optionId: number) => {
                                 await prisma.resOD.create({
                                     data: {
-                                        idres: resp.idres,
-                                        idp: question.idp,
-                                        idodes: optionId
+                                        idres: Number(resp.idres),
+                                        idp: Number(question.idp),
+                                        idodes: Number(optionId)
                                     }
                                 });
                             })
