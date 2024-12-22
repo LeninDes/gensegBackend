@@ -8,123 +8,105 @@ import { PrismaClient, Usuario } from "@prisma/client";
 const prisma = new PrismaClient();
 dotenv.config();
 
-const SECRET_KEY = process.env.JWT_SECRET || 'secret';  // Define una secret 
+const SECRET_KEY = process.env.JWT_SECRET || 'secret';  // Define una secret llave secreta para el token 
 
 /*---------- METODO LOGIN -------*/
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
+  const { usuario, password } = req.body; // Desestructurar usuario y contraseña
+
   try {
-    const { usuario, password } = req.body; // Se cambia dni a usuario
-    // Buscar el usuario por nombre de usuario (n_usu)
-    const existingUser = await prisma.usuario.findFirst({
-      where: { n_usu: usuario }, // Cambiamos a findFirst ya que n_usu no es único
-    });
-    console.log(existingUser);
-    const users = await prisma.usuario.findMany({
-      where: { n_usu: usuario, estado: true },
-    });
-
-    // Verificar si el usuario existe
-    if (!existingUser) {
-      throw("saltear");
-      res.status(404).json({
-        message: "El usuario no existe",
-      });
-      return;
-    }
-
-    // Comparar la contraseña ingresada con la contraseña hasheada almacenada
-    let isPasswordValid = false;
-    if (existingUser) {
-      isPasswordValid = await bcrypt.compare(password, existingUser.password);
-    }
-
-    if (!isPasswordValid) {
-      res.status(401).json({
-        message: "Credenciales incorrectas",
-      });
-      return;
-    }
-
-    // Generar un token
-    if (existingUser) {
-      const token = jwt.sign(
-        { dni: existingUser.dni, n_usu: existingUser.n_usu },
-        SECRET_KEY,
-        { expiresIn: "1h" } // El token expira en 1 hora
-      );
-      res.status(200).json({
-        message: "user",
-        tipo: 'user',
-        token,
-        users,
-      });
-      return;
-    }
-  } catch (error) {
-
-    try {
-        const { usuario, password } = req.body;  // Se cambia dni a usuario
-        // VALIDAR EL USUARIO
-        if(!usuario){
-          res.status(400).json({
-            message: 'El uusario es obligatorio'
-          })
-        return;
-    }
-    
-    //VALIDAR EL PASSWORD
-    if(!password){
+    if (!usuario || !password) {
       res.status(400).json({
-            message: 'La contrasenia es obligaroria'
-          })
-        return;
-      }
+        message: "El usuario y la contraseña son obligatorios",
+      });
+      return;
+    }
 
-      const user = await prisma.user.findUnique({where: {usuario}})
-      
-      // Comprobamos si el usuario existe
+    // Buscar el usuario por nombre de usuario (n_usu)
+    const existingUser = await prisma.usuario.findFirst({where: { n_usu: usuario },});
+
+    
+    // si no existe el usuario buscamos en la tabla user que sond de administrador general
+    if (!existingUser) {
+      const user = await prisma.user.findUnique({where: {usuario}});
       if(!user){
         res.status(404).json({error: 'Usuario no encontrado'});
         return;
       }
-      
       // Comparamos las password
       const passwordMatch = await bcrypt.compare(password, user.password);
       if(!passwordMatch){
-        res.status(401).json({
-            error: 'Usuario y contrasenias no coinciden'
-          })
+        res.status(401).json({error: 'Usuario y contrasenias no coinciden'});
         return;
       }
       
-      if(passwordMatch && user)
+      if(passwordMatch)
         {
-          const token = jwt.sign(
-              { userId: usuario },
-              SECRET_KEY,
-              { expiresIn: '1h' }  // El token expira en 1 hora
-            );   
-          res.status(200).json({
-            message: 'admin',
-            tipo: 'admin',
-            token,
-            user,
-          });
+          const token = jwt.sign({ idAdmin: user.id },SECRET_KEY,{ expiresIn: '1h' });   
+          res.status(200).json({message: 'admin',admin: true, token, user});
           return;
         }
-
-    } catch (error) {
-      console.error(error);
-    res.status(500).json({
-      message: "Error en el proceso de inicio de sesión",
-    });
     }
+    else{
+      const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+      
+      if (!isPasswordValid) {res.status(401).json({message: "Credenciales incorrectas",});return;}
+
+      const users = await prisma.usuario.findMany({where: { n_usu: usuario, estado: true }, 
+        select: {
+          dni: true,
+          n_usu: true,
+          rol_id: true,
+          subunidad_id_subuni: true,
+          rol: {select: { id_rol:true, n_rol: true}},
+          sub_uni: {select: {id_subuni:true, n_subuni: true}},
+        }
+      });
+      
+      // Generar un token
+      if (!users) {
+        res.status(404).json({message: "Usuario no encontrado"});return;
+      }
+      res.status(200).json({message: "user",admin: false,users});
+      return;
+    }
+  } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Error en el proceso de inicio de sesión",
+      message: "Error al iniciar sesión",
     });
   }
 };
+
+export const loginUniqueUser = async (req: Request, res: Response): Promise<void> => {
+  const {dni,n_usu,rol_id,subunidad_id_subuni} = req.body;
+  try {
+    if (!dni || !n_usu || !rol_id || !subunidad_id_subuni) {
+      res.status(400).json({
+        message: "Todos los campos son obligatorios",
+      });
+      return;
+    }
+    // Buscar el usuario por nombre de usuario (n_usu)
+    const existingUser = await prisma.usuario.findFirst({where: { dni, n_usu, rol_id, subunidad_id_subuni,estado:true },});
+
+      if(!existingUser){
+        res.status(404).json({error: 'Usuario no encontrado'});
+        return;
+      }
+
+      const token = jwt.sign({ dni: existingUser.dni, n_usu: existingUser.n_usu, rol_id: rol_id,subunidad: subunidad_id_subuni  },SECRET_KEY,{ expiresIn: "1h" });
+      res.status(200).json({message: "user",admin: false, token});
+      return;
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Error al iniciar sesión",
+    });
+  }
+};
+
 
 
 
@@ -282,19 +264,19 @@ export const toggleUserState = async (req: Request, res: Response): Promise<void
 export const getUser = async (req: Request, res: Response): Promise<void> => {
 
   const user = req.user as Usuario;
-  console.log("reloj ajustando");
-  const date = new Date();
-  date.setHours(date.getHours() - 5);
-  console.log(date);
+
   try {
     // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
     const users = await prisma.usuario.findFirst({
-      where: { dni: user.dni, n_usu: user.n_usu },
+      where: { dni: user.dni, n_usu: user.n_usu, rol_id: user.rol_id, subunidad_id_subuni:user.subunidad_id_subuni, estado:true },
       
     }); 
-
+    if (!users) {
+      res.status(404).json({ message: 'Usuario no encontrado', access: false });
+    }
     // Retornamos los usuarios con las relaciones
     res.status(200).json({users, access: true});
+
   } catch (error) {
     // Si hay un error, lo manejamos
     console.error(error);

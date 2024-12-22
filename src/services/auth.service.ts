@@ -2,6 +2,7 @@ import { User } from "../models/interface/user.interface"
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, Usuario} from '@prisma/client';
+import { access } from "fs";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const prisma = new PrismaClient();
@@ -14,6 +15,7 @@ interface UsuarioPayload {
     dni: string;
     n_usu:string;
     subunidad_id_subuni: number;
+    rol_id: number;
     // Add other fields as needed
   }
 
@@ -25,10 +27,10 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
     try {
         const payload = jwt.verify(token, JWT_SECRET) as UsuarioPayload;
         
-        const user = await prisma.usuario.findFirst({where: {dni: payload.dni,n_usu: payload.n_usu}});
+        const user = await prisma.usuario.findFirst({where: {dni: payload.dni,n_usu: payload.n_usu, rol_id: payload.rol_id, subunidad_id_subuni: payload.subunidad_id_subuni, estado:true}});
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found', access: false });
         }
         
         req.user = user as Usuario;

@@ -52,7 +52,7 @@ model Sub_unidad {
 }
 model Usuario {
   dni                   String @db.Char(8)
-  n_usu                 String 
+  n_usu                 String @unique
   estado                Boolean @default(true)
   password              String
   rol_id                Int   
