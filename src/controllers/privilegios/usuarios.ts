@@ -176,7 +176,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const AllUser = async (req: Request, res: Response): Promise<void> => {
-  console.log("llega");
+
   try {
     // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
     const users = await prisma.usuario.findMany({

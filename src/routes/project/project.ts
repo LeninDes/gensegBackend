@@ -6,7 +6,7 @@ const router = express.Router();
 /** RUTAS REGISTRO Y LOGIN */
 router.post('/project', createProject);
 router.get('/project/form', getQuestionsByFormActive);
-router.get('/project/graficos/:id', getProjectAllBySubunidad)
+router.get('/project/graficos/:id', getProjectAllBySubunidad);
 router.get('/project/:id', getActivitysByProject);
 router.get('/project/subunidad/:id', getProjectBySubUnidad);
 router.get('/project/user/:dni/:idsub', getProjectByUserSubUnidad);

@@ -6,7 +6,7 @@ const router = express.Router();
 /** RUTAS REGISTRO Y LOGIN */
 router.post('/actividad', createAnswersAndInsertActivity);
 //router.post('/actividad', createAnswersAndInsertActivity);
-router.put('/actividad/:id',);
+router.put('/actividad/:id', );
 router.delete('/actividad/:id',);
 
 export default router;
