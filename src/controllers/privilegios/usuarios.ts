@@ -201,6 +201,7 @@ export const getUserwithDNI = async (
 ): Promise<void> => {
   try {
     const { dni } = req.params;
+    console.log("llega", dni);
     const getRoles = await prisma.usuario.findFirst({
       where: { dni: dni, estado: true },
     });
@@ -211,6 +212,8 @@ export const getUserwithDNI = async (
     res.status(500).json({ message: "Error al obtener los roles" });
   }
 };
+
+
 export const toggleUserState = async (req: Request, res: Response): Promise<void> => {
   const { dni, rol_id, subunidad_id_subuni, estado } = req.body; // Desestructurar todos los campos necesarios.
 

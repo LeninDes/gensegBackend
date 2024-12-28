@@ -1,12 +1,16 @@
 import express from 'express'
-import { getQuestionsByFormActive, createProject, getActivitysByProject, getProjectBySubUnidad, getProjectByUserSubUnidad, getProjectAllBySubunidad} from '../../controllers/project/project';
+import { deleteProject, updateProject, getQuestionsByFormActive, createProject, getActivitysByProject, getProjectBySubUnidad, getProjectStates,  getActivitiesAllBySubunidad, getProjectByUserSubUnidad, getProjectAllBySubunidad} from '../../controllers/project/project';
 
 const router = express.Router();
 
 /** RUTAS REGISTRO Y LOGIN */
 router.post('/project', createProject);
 router.get('/project/form', getQuestionsByFormActive);
-router.get('/project/graficos/:id', getProjectAllBySubunidad);
+router.get('/project/graficos/:id', getActivitiesAllBySubunidad);
+router.get('/project/dona/:id', getProjectStates);
+router.put('/project/:id', updateProject);
+router.delete('/project',deleteProject);
+//router.get('/project/graficos/:id', getProjectAllBySubunidad);
 router.get('/project/:id', getActivitysByProject);
 router.get('/project/subunidad/:id', getProjectBySubUnidad);
 router.get('/project/user/:dni/:idsub', getProjectByUserSubUnidad);

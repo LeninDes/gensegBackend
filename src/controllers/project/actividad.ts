@@ -3,15 +3,107 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export const createActivity = async (req: Request, res: Response): Promise<void> => {
+function getDateDifference(date1: Date, date2: Date): { days: number, hours: number, minutes: number, seconds: number } {
+    const diffInMs = date2.getTime() - date1.getTime();
+
+    const seconds = Math.floor(diffInMs / 1000) % 60;
+    const minutes = Math.floor(diffInMs / (1000 * 60)) % 60;
+    const hours = Math.floor(diffInMs / (1000 * 60 * 60)) % 24;
+    const days = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    return { days, hours, minutes, seconds };
+}
+
+function addToDate(date: Date, value: number, unit: 'seconds' | 'minutes' | 'hours' | 'days' | 'months' | 'years'): Date {
+    const newDate = new Date(date); // Evitar modificar la fecha original
+    switch (unit) {
+        case 'seconds':
+            newDate.setSeconds(newDate.getSeconds() + value);
+            break;
+        case 'minutes':
+            newDate.setMinutes(newDate.getMinutes() + value);
+            break;
+        case 'hours':
+            newDate.setHours(newDate.getHours() + value);
+            break;
+        case 'days':
+            newDate.setDate(newDate.getDate() + value);
+            break;
+        case 'months':
+            newDate.setMonth(newDate.getMonth() + value);
+            break;
+        case 'years':
+            newDate.setFullYear(newDate.getFullYear() + value);
+            break;
+        default:
+            throw new Error("Invalid unit. Use 'seconds', 'minutes', 'hours', 'days', 'months', or 'years'.");
+    }
+    return newDate;
+}
+
+function isValidDate(date: unknown): date is Date {
+    return date instanceof Date && !isNaN(date.getTime());
+}
+
+export const probar = async (req: Request, res: Response): Promise<void> => {
     const { name, fInit, fFin, idproj, idres } = req.body;
     if (!name || !fInit || !fFin || !idproj || !idres ) {
         res.status(400).json({ error: 'Todos los campos son requeridos.' });
         return;
     }
-      
+    if(isValidDate(fInit) && isValidDate(fFin)) {
+        res.status(400).json({ error: 'Las fechas no son validas' });
+        return;
+    }
+    
       try {
-        const newActivity = await prisma.actividad.create({
+        
+        const date = new Date();
+        date.setHours(date.getHours() - 5);
+
+        const project = await prisma.project.findFirst({
+            where:{
+                idproj:idproj
+            }
+        })
+
+        const dateIP = project?.fInit;
+        if (!dateIP) {
+            res.status(400).json({ error: 'La fecha del proyecto indefinido' });
+            return;
+        }
+        
+        const dateIA = new Date(fInit);
+        console.log(dateIP, "Parsed date1");
+        console.log(dateIA, "Parsed date2");
+        //const diffInMs = date1.getTime() - date2.getTime();
+        const diffInMsI = dateIA.getTime() - dateIP.getTime();
+        const diffInDaysI = diffInMsI / (1000 * 60 * 60 * 24); // Convertir ms a días
+        console.log(diffInDaysI, "Difference in days");
+        if (diffInDaysI<0)
+        {
+            console.log("Se actualiza la fecha de inicio");
+        }
+
+        const dateFP = project?.fFin;
+        if (!dateFP) {
+            res.status(400).json({ error: 'La fecha del proyecto indefinido' });
+            return;
+        }
+        const dateFA = new Date(fFin);
+        console.log(dateFP, "Parsed date1");
+        console.log(dateFA, "Parsed date2");
+        //const diffInMs = date1.getTime() - date2.getTime();
+        const diffInMsF = dateFA.getTime() - dateFP.getTime();
+        const diffInDaysF = diffInMsF / (1000 * 60 * 60 * 24); // Convertir ms a días
+        console.log(diffInDaysF, "Difference in days");
+        if (diffInDaysF>0)
+        {
+            console.log("Se actualiza la fecha de final");
+        }
+
+
+        /*const newActivity = await prisma.actividad.create({
           data: {
             name,
             fInit,
@@ -20,8 +112,8 @@ export const createActivity = async (req: Request, res: Response): Promise<void>
             idproj,
             idres
           },
-        });
-        res.status(201).json(newActivity);
+        });*/
+        res.status(201).json( {message : "Todo correctamente"});
       } catch (error) {
         console.error("Error creando formulario:", error);
         res.status(500).json({ error: "Error interno del servidor." });
@@ -159,6 +251,40 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
             }
         });
 
+        // cambiar la decha de inicio del proyecto respecto a las actividades insertadas
+        const project = await prisma.project.findUnique({
+            where:{
+                idproj:idproj
+            }
+        })
+
+        // Verifica si el proyecto existe
+        if (!project) {
+            return res.status(404).json({ message: "Project not found" });
+        }
+        
+        let updatedFInit = project.fInit;
+        if (!project.fInit || new Date(fInit) < new Date(project.fInit)) {
+            updatedFInit = new Date(fInit);
+        }
+
+        // Comprobar y actualizar la fecha final
+        let updatedFFin = project.fFin;
+        if (!project.fFin || new Date(fFin) > new Date(project.fFin)) {
+            updatedFFin = new Date(fFin);
+        }
+
+        // Actualizar el proyecto solo si las fechas cambiaron
+        if (updatedFInit !== project.fInit || updatedFFin !== project.fFin) {
+            await prisma.project.update({
+                where: { idproj },
+                data: {
+                    fInit: updatedFInit,
+                    fFin: updatedFFin,
+                },
+            });
+        }
+
         res.status(201).json({ 
             message: 'Respuestas guardadas exitosamente.', 
             //data: savedResponses, 
@@ -171,6 +297,278 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
     }
 };
 
+export const updateAnswersAndActivity = async (req: Request, res: Response) => {
+    const { responses, idproj, fInit, fFin, name, idActivity } = req.body;
+
+    if (!responses || !idproj || !idActivity) {
+        return res.status(400).json({ error: 'Las respuestas, ID del proyecto y ID de la actividad son requeridos.' });
+    }
+
+    try {
+        // Buscar la actividad existente
+        const activity = await prisma.actividad.findUnique({
+            where: { idActivi: idActivity },
+        });
+
+        if (!activity) {
+            return res.status(404).json({ error: 'La actividad especificada no existe.' });
+        }
+
+        // Actualizar las respuestas asociadas
+        const resp = await prisma.res.findUnique({
+            where: { idres: activity.idres },
+        });
+
+        if (!resp) {
+            return res.status(404).json({ error: 'Las respuestas asociadas no fueron encontradas.' });
+        }
+
+        await Promise.all(
+            Object.entries(responses).map(async ([questionId, answer]) => {
+                const questionIdInt = parseInt(questionId); // Convertir la clave a un entero
+                const answerString = Array.isArray(answer) ? JSON.stringify(answer) : String(answer);
+
+                // Obtener tipo de pregunta desde la base de datos
+                const question = await prisma.prg.findUnique({
+                    where: { idp: questionIdInt },
+                });
+
+                if (!question) {
+                    console.error(`Pregunta con ID ${questionIdInt} no encontrada.`);
+                    return;
+                }
+
+                // Actualizar respuestas según el tipo de pregunta
+                if (question.type === 'text') {
+                    await prisma.resTxt.updateMany({
+                        where: {
+                            idres: resp.idres,
+                            idp: question.idp,
+                        },
+                        data: { resTxt: answerString },
+                    });
+                } else if (question.type === 'multipleChoice') {
+                    if (Array.isArray(answer)) {
+                        // Eliminar respuestas antiguas y agregar nuevas
+                        await prisma.resOM.deleteMany({
+                            where: {
+                                idres: resp.idres,
+                                idp: question.idp,
+                            },
+                        });
+                        await Promise.all(
+                            answer.map(async (optionId: number) => {
+                                await prisma.resOM.create({
+                                    data: {
+                                        idres: resp.idres,
+                                        idp: question.idp,
+                                        idomul: optionId,
+                                    },
+                                });
+                            })
+                        );
+                    }
+                } else if (question.type === 'singleChoice') {
+                    await prisma.resOU.updateMany({
+                        where: {
+                            idres: resp.idres,
+                            idp: question.idp,
+                        },
+                        data: { idou: Number(answerString) },
+                    });
+                } else if (question.type === 'dropdown') {
+                    await prisma.resOD.updateMany({
+                        where: {
+                            idres: resp.idres,
+                            idp: question.idp,
+                        },
+                        data: { idodes: Number(answerString) },
+                    });
+                } else if (question.type === 'date') {
+                    await prisma.resDate.updateMany({
+                        where: {
+                            idres: resp.idres,
+                            idp: question.idp,
+                        },
+                        data: { resdate: new Date(answerString) },
+                    });
+                } else if (question.type === 'archive') {
+                    await prisma.resFile.updateMany({
+                        where: {
+                            idres: resp.idres,
+                            idp: question.idp,
+                        },
+                        data: { resFile: answerString },
+                    });
+                } else {
+                    console.error(`Tipo de pregunta desconocido: ${question.type}`);
+                }
+            })
+        );
+
+        // Actualizar la actividad asociada
+        await prisma.actividad.update({
+            where: { idActivi: idActivity },
+            data: {
+                fFin: new Date(fFin),
+                fInit: new Date(fInit),
+                estado: "Actualizado",
+                name: name,
+                idproj: idproj,
+            },
+        });
+
+        // Actualizar las fechas del proyecto si cambiaron
+        const project = await prisma.project.findUnique({
+            where: { idproj },
+        });
+
+        if (!project) {
+            return res.status(404).json({ message: "Proyecto no encontrado." });
+        }
+
+        let updatedFInit = project.fInit;
+        if (!project.fInit || new Date(fInit) < new Date(project.fInit)) {
+            updatedFInit = new Date(fInit);
+        }
+
+        let updatedFFin = project.fFin;
+        if (!project.fFin || new Date(fFin) > new Date(project.fFin)) {
+            updatedFFin = new Date(fFin);
+        }
+
+        if (updatedFInit !== project.fInit || updatedFFin !== project.fFin) {
+            await prisma.project.update({
+                where: { idproj },
+                data: {
+                    fInit: updatedFInit,
+                    fFin: updatedFFin,
+                },
+            });
+        }
+
+        res.status(200).json({ message: 'Respuestas y actividad actualizadas correctamente.' });
+    } catch (error) {
+        console.error('Error al actualizar las respuestas:', error);
+        res.status(500).json({ error: 'Ocurrió un error al actualizar las respuestas.' });
+    }
+};
+
+export const deleteActivityAndResponses = async (req: Request, res: Response) => {
+    const { id } = req.body;
+
+    if (!id) {
+        return res.status(400).json({ error: 'El ID de la actividad es requerido.' });
+    }
+
+    try {
+        // Buscar la actividad por ID
+        const activity = await prisma.actividad.findUnique({
+            where: { idActivi: Number(id) },
+        });
+
+        if (!activity) {
+            return res.status(404).json({ error: 'La actividad especificada no existe.' });
+        }
+
+        // Obtener el ID de las respuestas asociadas
+        const idres = activity.idres;
+
+        // Eliminar todas las respuestas asociadas a esta actividad
+        await prisma.resTxt.deleteMany({ where: { idres } });
+        await prisma.resOM.deleteMany({ where: { idres } });
+        await prisma.resOU.deleteMany({ where: { idres } });
+        await prisma.resOD.deleteMany({ where: { idres } });
+        await prisma.resDate.deleteMany({ where: { idres } });
+        await prisma.resFile.deleteMany({ where: { idres } });
+
+        // Eliminar la respuesta principal
+        await prisma.res.delete({ where: { idres } });
+
+        // Eliminar la actividad
+        await prisma.actividad.delete({ where: { idActivi: Number(id) } });
+
+        // Actualizar las fechas del proyecto
+        const project = await prisma.project.findUnique({
+            where: { idproj: activity.idproj },
+            include: { actividad: true }, // Incluye todas las actividades restantes
+        });
+
+        if (!project) {
+            return res.status(404).json({ error: 'El proyecto asociado no existe.' });
+        }
+
+        // Recalcular las fechas del proyecto basadas en las actividades restantes
+        const actividadesRestantes = project.actividad;
+
+        let updatedFInit: Date | null = null;
+        let updatedFFin: Date | null = null;
+
+        if (actividadesRestantes.length > 0) {
+            updatedFInit = actividadesRestantes.reduce<Date | null>((minDate, act) =>
+                !minDate || new Date(act.fInit) < minDate ? new Date(act.fInit) : minDate,
+                null
+            );
+            updatedFFin = actividadesRestantes.reduce<Date | null>((maxDate, act) =>
+                !maxDate || new Date(act.fFin) > maxDate ? new Date(act.fFin) : maxDate,
+                null
+            );
+        }
+
+        await prisma.project.update({
+            where: { idproj: activity.idproj },
+            data: {
+                fInit: updatedFInit ? new Date(updatedFInit) : null,
+                fFin: updatedFFin ? new Date(updatedFFin) : null,
+            },
+        });
+
+        res.status(200).json({ message: 'Actividad y respuestas eliminadas correctamente.' });
+    } catch (error) {
+        console.error('Error al eliminar la actividad y respuestas:', error);
+        res.status(500).json({ error: 'Ocurrió un error al eliminar la actividad y respuestas.' });
+    }
+};
+
+export const getNumberEstatesActivities = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+    try {
+        if (!id) {
+            res.status(400).json({ message: "El ID de la subunidad es requerido" });
+            return;
+        }
+
+        // Obtener todas las actividades de los proyectos relacionados con la subunidad
+        const activities = await prisma.actividad.findMany({
+            where: {
+                project: {
+                    subunidad_id_subuni: Number(id), // Relación con proyectos de la subunidad
+                },
+            },
+            select: {
+                estado: true,
+            },
+        });
+
+        if (!activities || activities.length === 0) {
+            res.status(404).json({ message: "No se encontraron actividades" });
+            return;
+        }
+
+        // Acumular los estados de las actividades
+        const stateCounts = activities.reduce((acc: Record<string, number>, activity) => {
+            const state = activity.estado || "Desconocido"; // Manejar estados nulos o no definidos
+            acc[state] = (acc[state] || 0) + 1; // Incrementar el contador para el estado actual
+            return acc;
+        }, {});
+
+        res.status(200).json(stateCounts);
+    } catch (error) {
+        console.error("Error al obtener actividades:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
 
 
 

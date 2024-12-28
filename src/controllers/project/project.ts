@@ -22,8 +22,7 @@ export const createProject = async (req: Request, res: Response) => {
                 id_rol: Number(id_rol),
                 subunidad_id_subuni: Number(subunidad),
                 estado: "Pendiente",// actualizar este estado posteriormente
-                escuelaProfesional: EP,
-                fInit: date,
+                escuelaProfesional: EP
             },
         });
 
@@ -48,6 +47,84 @@ export const createProject = async (req: Request, res: Response) => {
     }
 };
 
+export const updateProject = async (req: Request, res: Response) => {
+    const { plan, dni, id_rol, subunidad, EP, estado } = req.body;
+    const { id }=req.params;
+
+    // Verificar que se haya enviado el ID del proyecto
+    if (!id) {
+        return res.status(400).json({ error: 'El ID del proyecto es requerido.' });
+    }
+
+    try {
+        // Buscar el proyecto por ID para verificar si existe
+        const existingProject = await prisma.project.findUnique({
+            where: { idproj: Number(id) },
+        });
+
+        if (!existingProject) {
+            return res.status(404).json({ error: 'El proyecto especificado no existe.' });
+        }
+
+        // Actualizar el proyecto con los datos proporcionados
+        const updatedProject = await prisma.project.update({
+            where: { idproj: Number(id) },
+            data: {
+                ...(plan && { plan }), // Actualiza solo si 'plan' está presente en la solicitud
+                ...(dni && { dni }),
+                ...(id_rol && { id_rol: Number(id_rol) }),
+                ...(subunidad && { subunidad_id_subuni: Number(subunidad) }),
+                ...(EP && { escuelaProfesional: EP }),
+                ...(estado && { estado }),
+            },
+        });
+
+        res.status(200).json({ message: 'Proyecto actualizado exitosamente.', project: updatedProject });
+    } catch (error) {
+        console.error('Error al actualizar el proyecto:', error);
+
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        res.status(500).json({ error: 'Ocurrió un error al actualizar el proyecto.' });
+    }
+};
+
+export const deleteProject = async (req: Request, res: Response) => {
+    const { id } = req.body;
+
+    // Verificar que se haya enviado el ID del proyecto
+    if (!id) {
+        return res.status(400).json({ error: 'El ID del proyecto es requerido.' });
+    }
+
+    try {
+        // Verificar si el proyecto existe
+        const existingProject = await prisma.project.findUnique({
+            where: { idproj: Number(id) },
+        });
+
+        if (!existingProject) {
+            return res.status(404).json({ error: 'El proyecto especificado no existe.' });
+        }
+
+        // Eliminar el proyecto
+        await prisma.project.delete({
+            where: { idproj: Number(id) },
+        });
+
+        res.status(200).json({ message: 'Proyecto eliminado exitosamente.' });
+    } catch (error) {
+        console.error('Error al eliminar el proyecto:', error);
+
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        res.status(500).json({ error: 'Ocurrió un error al eliminar el proyecto.' });
+    }
+};
 
 export const getQuestionsByFormActive = async (req: Request, res: Response): Promise<void> => {
 
@@ -145,7 +222,7 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
             res.status(400).json({ message: 'El ID es obligatorio' });
         }
         // Convertir el ID a número (si es necesario)
-        const projId = parseInt(id);
+        const projId = Number(id);
 
         // Verificar que el registro existe
         const ActivitysByProject = await prisma.actividad.findMany({
@@ -227,9 +304,10 @@ export const getProjectByUserSubUnidad = async (req: Request, res: Response): Pr
 
 export const getProjectAllBySubunidad = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
+
     try {
         if (!id) {
-            res.status(400).json({ message: 'El ID de la subunidad es requerido' });
+            res.status(400).json({ message: "El ID de la subunidad es requerido" });
             return;
         }
 
@@ -244,36 +322,146 @@ export const getProjectAllBySubunidad = async (req: Request, res: Response): Pro
         });
 
         if (!projects || projects.length === 0) {
-            res.status(404).json({ message: 'No se encontraron proyectos' });
+            res.status(404).json({ message: "No se encontraron proyectos" });
             return;
         }
 
-        // Transformación de datos
-        const transformedProjects = projects.map((project) => {
-            // Verificar si fInit no es null
-            const formattedDate = project.fInit
-                ? (() => {
-                      const date = new Date(project.fInit);
-                      const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, '0'); // Ajustar mes
-                      const day = String(date.getDate()).padStart(2, '0'); // Día con 2 dígitos
-                      return `${year}-${month}-${day}`; // Formatear fecha
-                  })()
-                : null; // Si fInit es null, devolver null como fecha
+        // Transformar y agrupar por mes
+        const monthlyAccumulation: Record<string, { date: string; completado: number; pendiente: number; archivado: number; curso: number }> = {};
 
-            return {
-                date: formattedDate,
-                completado: project.estado === 'Completado' ? 1 : 0,
-                pendiente: project.estado === 'Pendiente' ? 1 : 0,
-                archivado: project.estado === 'Archivado' ? 1 : 0,
-                curso: project.estado === 'Curso' ? 1 : 0,
-            };
+        projects.forEach((project) => {
+            if (project.fInit) {
+                const date = new Date(project.fInit);
+                const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; // Formato "YYYY-MM"
+
+                if (!monthlyAccumulation[yearMonth]) {
+                    monthlyAccumulation[yearMonth] = {
+                        date: yearMonth + "-05", // Fecha formateada como "YYYY-MM-05" (día fijo)
+                        completado: 0,
+                        pendiente: 0,
+                        archivado: 0,
+                        curso: 0,
+                    };
+                }
+
+                // Acumular datos según estado del proyecto
+                if (project.estado === "Completado") monthlyAccumulation[yearMonth].completado++;
+                if (project.estado === "Pendiente") monthlyAccumulation[yearMonth].pendiente++;
+                if (project.estado === "Archivado") monthlyAccumulation[yearMonth].archivado++;
+                if (project.estado === "Curso") monthlyAccumulation[yearMonth].curso++;
+            }
         });
+
+        // Convertir el objeto acumulado a un array
+        const transformedProjects = Object.values(monthlyAccumulation);
 
         res.status(200).json(transformedProjects);
     } catch (error) {
-        console.error('Error al obtener proyectos:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
+        console.error("Error al obtener proyectos:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
     }
 };
 
+
+export const getActivitiesAllBySubunidad = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+    try {
+        if (!id) {
+            res.status(400).json({ message: "El ID de la subunidad es requerido" });
+            return;
+        }
+
+        // Obtener todas las actividades de los proyectos relacionados con la subunidad
+        const activities = await prisma.actividad.findMany({
+            where: {
+                project: {
+                    subunidad_id_subuni: Number(id), // Relación con proyectos de la subunidad
+                },
+            },
+            select: {
+                estado: true,
+                fInit: true,
+            },
+        });
+
+        if (!activities || activities.length === 0) {
+            res.status(404).json({ message: "No se encontraron actividades" });
+            return;
+        }
+
+        // Transformar y agrupar actividades por mes
+        const monthlyAccumulation: Record<string, { date: string; completado: number; pendiente: number; archivado: number; curso: number }> = {};
+
+        activities.forEach((activity) => {
+            if (activity.fInit) {
+                const date = new Date(activity.fInit);
+                const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; // Formato "YYYY-MM"
+
+                if (!monthlyAccumulation[yearMonth]) {
+                    monthlyAccumulation[yearMonth] = {
+                        date: yearMonth + "-05", // Fecha formateada como "YYYY-MM-05" (día fijo)
+                        completado: 0,
+                        pendiente: 0,
+                        archivado: 0,
+                        curso: 0,
+                    };
+                }
+
+                // Acumular datos según estado de la actividad
+                if (activity.estado === "Completado") monthlyAccumulation[yearMonth].completado++;
+                if (activity.estado === "Pendiente") monthlyAccumulation[yearMonth].pendiente++;
+                if (activity.estado === "Archivado") monthlyAccumulation[yearMonth].archivado++;
+                if (activity.estado === "Curso") monthlyAccumulation[yearMonth].curso++;
+            }
+        });
+
+        // Convertir el objeto acumulado a un array
+        const transformedActivities = Object.values(monthlyAccumulation);
+
+        res.status(200).json(transformedActivities);
+    } catch (error) {
+        console.error("Error al obtener actividades:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+export const getProjectStates = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+    try {
+        if (!id) {
+            res.status(400).json({ message: "El ID de la subunidad es requerido" });
+            return;
+        }
+
+        // Obtener todos los proyectos relacionados con la subunidad
+        const projects = await prisma.project.findMany({
+            where: {
+                subunidad_id_subuni: Number(id), // Relación con la subunidad
+            },
+            select: {
+                estado: true, // Selecciona el campo "estado"
+            },
+        });
+
+        if (!projects || projects.length === 0) {
+            res.status(404).json({ message: "No se encontraron proyectos" });
+            return;
+        }
+
+        // Contar los estados
+        const stateCounts = projects.reduce(
+            (acc, project) => {
+                acc[project.estado] = (acc[project.estado] || 0) + 1;
+                return acc;
+            },
+            { Completado: 0, Pendiente: 0, Archivado: 0, Curso: 0 } as Record<string, number>
+        );
+        const total = projects.length;
+        res.status(200).json({...stateCounts, total});
+    } catch (error) {
+        console.error("Error al obtener proyectos:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
