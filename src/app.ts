@@ -18,16 +18,25 @@ import Form from './routes/project/form'
 import Preguntas from './routes/project/preguntas/pregunta'
 import Project from './routes/project/project'
 import Actividad from './routes/project/actividades'
+import swaggerUi from 'swagger-ui-express';
+import yaml from 'yamljs';
 //--------------
 // APP CON EXPRESS
 const app = express()
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Parsear archivos YAML
+const swaggerDocument = yaml.load('./swagger.yaml');
+
 app.use(express.json());
 
 // CORS para el control del acceso a esta api
 app.use(cors()); 
 
 // RUTAS
+// Ruta para servir la documentación
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 app.use('/auth', authRoutes);
 app.use('/api/auth', Usuarios);
 app.use('/api', subUnidad);

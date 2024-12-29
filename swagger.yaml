@@ -1,0 +1,151 @@
+openapi: 3.0.0
+info:
+  title: Genseg API
+  description: API para la gestión de proyectos y usuarios en Genseg
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Servidor local de desarrollo
+
+paths:
+  /projects:
+    get:
+      summary: Obtener todos los proyectos
+      responses:
+        '200':
+          description: Lista de proyectos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+    post:
+      summary: Crear un proyecto
+      requestBody:
+        description: Datos para crear un proyecto
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewProject'
+      responses:
+        '201':
+          description: Proyecto creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  /users:
+    get:
+      summary: Obtener todos los usuarios
+      responses:
+        '200':
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Crear un usuario
+      requestBody:
+        description: Datos para crear un usuario
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        idproj:
+          type: integer
+          example: 1
+        dni:
+          type: string
+          example: "75548237"
+        id_rol:
+          type: integer
+          example: 1
+        subunidad_id_subuni:
+          type: integer
+          example: 1
+        plan:
+          type: string
+          example: "/uploads/plan-123456789.pdf"
+        estado:
+          type: string
+          example: "Pendiente"
+        escuelaProfesional:
+          type: string
+          example: "Ingeniería de Sistemas"
+    NewProject:
+      type: object
+      properties:
+        dni:
+          type: string
+          example: "75548237"
+        id_rol:
+          type: integer
+          example: 1
+        subunidad:
+          type: integer
+          example: 1
+        EP:
+          type: string
+          example: "Ingeniería de Sistemas"
+        plan:
+          type: string
+          example: "/uploads/plan-123456789.pdf"
+    User:
+      type: object
+      properties:
+        dni:
+          type: string
+          example: "75548237"
+        n_usu:
+          type: string
+          example: "david"
+        estado:
+          type: boolean
+          example: true
+        password:
+          type: string
+          example: "password123"
+        rol_id:
+          type: integer
+          example: 1
+        subunidad_id_subuni:
+          type: integer
+          example: 1
+    NewUser:
+      type: object
+      properties:
+        dni:
+          type: string
+          example: "75548237"
+        n_usu:
+          type: string
+          example: "david"
+        password:
+          type: string
+          example: "password123"
+        rol_id:
+          type: integer
+          example: 1
+        subunidad_id_subuni:
+          type: integer
+          example: 1
