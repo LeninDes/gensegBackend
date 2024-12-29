@@ -1,6 +1,7 @@
 /* IMPORTAMOS DE DOTENV */
 import dotenv from 'dotenv';
 dotenv.config()
+import path from 'path';
 
 /** IMPORTAMOS DE LIBRERIAS  */
 import express from 'express';
@@ -20,6 +21,7 @@ import Actividad from './routes/project/actividades'
 //--------------
 // APP CON EXPRESS
 const app = express()
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(express.json());
 
 // CORS para el control del acceso a esta api

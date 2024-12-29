@@ -1,23 +1,56 @@
 import { Request, Response } from "express";
 import { PrismaClient, Prisma } from "@prisma/client";
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 const prisma = new PrismaClient();
 
+// Asegúrate de que exista la carpeta de destino
+const uploadFolder = path.join(__dirname, '../../uploads');
+
+if (!fs.existsSync(uploadFolder)) {
+    fs.mkdirSync(uploadFolder);
+}
+
+// Configuración de almacenamiento con multer
+const storage = multer.diskStorage({
+    
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    },
+});
+
+export const upload = multer({ storage });
+
 
 export const createProject = async (req: Request, res: Response) => {
-    const { plan, dni, id_rol, subunidad, EP } = req.body;
+    const { dni, id_rol, subunidad, EP } = req.body;
 
-    if (!plan || !dni || !id_rol || !subunidad || !EP) {
+    //console.log(req.file, "file");
+    if (!req.file || !dni || !id_rol || !subunidad || !EP) {
         return res.status(400).json({ error: 'Todos los campos son requeridos.' });
     }
+    
+    // Obtener la ruta del archivo
+    const planPath = req.file.path;
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`; // Construir la URL pública
+    console.log(planPath, "Ruta local del archivo");
+    console.log(fileUrl, "URL pública del archivo");
+    console.log(planPath, "asdsa");
     const date = new Date();
     date.setHours(date.getHours() - 5);
 
     try {
+        
         // Crear proyecto
         const newProject = await prisma.project.create({
             data: {
-                plan,
+                plan: planPath,
                 dni: dni,
                 id_rol: Number(id_rol),
                 subunidad_id_subuni: Number(subunidad),
@@ -35,7 +68,7 @@ export const createProject = async (req: Request, res: Response) => {
             }
         })
 
-        res.status(201).json({ message: 'Proyecto creado exitosamente.', project: newProject, idproj: newProject.idproj });
+        res.status(201).json({ message: 'Proyecto creado exitosamente.', project: newProject, idproj: newProject.idproj, url:fileUrl });
     } catch (error) {
         console.error('Error al crear el proyecto:', error);
 

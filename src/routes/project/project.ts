@@ -1,10 +1,10 @@
 import express from 'express'
-import { deleteProject, updateProject, getQuestionsByFormActive, createProject, getActivitysByProject, getProjectBySubUnidad, getProjectStates,  getActivitiesAllBySubunidad, getProjectByUserSubUnidad, getProjectAllBySubunidad} from '../../controllers/project/project';
+import { upload, deleteProject, updateProject, getQuestionsByFormActive, createProject, getActivitysByProject, getProjectBySubUnidad, getProjectStates,  getActivitiesAllBySubunidad, getProjectByUserSubUnidad, getProjectAllBySubunidad} from '../../controllers/project/project';
 
 const router = express.Router();
 
 /** RUTAS REGISTRO Y LOGIN */
-router.post('/project', createProject);
+router.post('/project', upload.single('file'), createProject);
 router.get('/project/form', getQuestionsByFormActive);
 router.get('/project/graficos/:id', getActivitiesAllBySubunidad);
 router.get('/project/dona/:id', getProjectStates);
