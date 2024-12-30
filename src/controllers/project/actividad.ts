@@ -1,7 +1,19 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import multer from 'multer';
 
 const prisma = new PrismaClient();
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, "uploads/");
+    },
+    filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    },
+  });
+  
+  export const upload = multer({ storage });
 
 function getDateDifference(date1: Date, date2: Date): { days: number, hours: number, minutes: number, seconds: number } {
     const diffInMs = date2.getTime() - date1.getTime();
@@ -122,8 +134,8 @@ export const probar = async (req: Request, res: Response): Promise<void> => {
 
 export const createAnswersAndInsertActivity = async (req: Request, res: Response) => {
     const { responses, idproj, fInit, fFin, name } = req.body;
-
-    if (!responses || !idproj) {
+    
+    if (!responses || !idproj || !fFin || !fInit || !name) {
         return res.status(400).json({ error: 'El ID del formulario, las respuestas y los metadatos son requeridos.' });
     }
 
@@ -297,6 +309,187 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
     }
 };
 
+export const createAnswersAndInsertActivityNewFormData = async (req: Request, res: Response) => {
+  const { idproj, fInit, fFin, name } = req.body; // Parse text fields
+  const responses = JSON.parse(req.body.responses || "{}"); // Parse JSON responses
+
+  if (!idproj || !responses || !fFin || !fInit || !name) {
+    return res.status(400).json({ error: "El ID del proyecto y las respuestas son requeridos." });
+  }
+
+  try {
+    console.log(responses, "responses");
+
+    console.log("Archivos recibidos:", req.files);
+    console.log("Body recibido:", req.body);
+    // Get the active form
+    const form = await prisma.form.findFirst({
+      where: {
+        estado: true,
+      },
+    });
+
+    if (!form) {
+      return res.status(400).json({ error: "No hay ningún formulario activo." });
+    }
+
+    const idf = form.idf;
+
+    // Create a response record
+    const resp = await prisma.res.create({
+      data: {
+        idf: Number(idf),
+        date: new Date(),
+      },
+    });
+
+    // Process responses
+    for (const [key, value] of Object.entries(responses)) {
+      const question = await prisma.prg.findUnique({
+        where: { idp: parseInt(key) },
+      });
+      console.log("questions", question);
+      console.log("clave", key, " value ", value);
+      if (!question) {
+        console.error(`Pregunta con ID ${key} no encontrada.`);
+        continue;
+      }
+
+      //if (req.files && (req.files as { [fieldname: string]: Express.Multer.File[] })[key]) {
+      if(value === "file"){
+        // Buscar el archivo que tiene un fieldname que coincide con el key
+    const file = (req.files as Express.Multer.File[]).find(
+        (f) => f.fieldname === key
+      );
+  
+      if (!file) {
+        console.error(`Archivo con fieldname ${key} no encontrado.`);
+        continue;
+      }
+      //const file = (req.files as Record<string, Express.Multer.File[]>)[key][0];
+        console.log(file.path, "file");
+        await prisma.resFile.create({
+          data: {
+            idres: resp.idres,
+            idp: parseInt(key),
+            resFile: file.path,
+          },
+        });
+      } else {
+        const answer = Array.isArray(value) ? value : [value];
+
+        switch (question.type) {
+          case "text":
+            await prisma.resTxt.create({
+              data: {
+                idres: resp.idres,
+                idp: parseInt(key),
+                resTxt: String(value),
+              },
+            });
+            break;
+          case "multipleChoice":
+            await Promise.all(
+              answer.map(async (optionId) => {
+                await prisma.resOM.create({
+                  data: {
+                    idres: resp.idres,
+                    idp: parseInt(key),
+                    idomul: parseInt(optionId as string),
+                  },
+                });
+              })
+            );
+            break;
+          case "singleChoice":
+            await Promise.all(
+              answer.map(async (optionId) => {
+                await prisma.resOU.create({
+                  data: {
+                    idres: resp.idres,
+                    idp: parseInt(key),
+                    idou: parseInt(optionId as string),
+                  },
+                });
+              })
+            );
+            break;
+          case "dropdown":
+            await Promise.all(
+              answer.map(async (optionId) => {
+                await prisma.resOD.create({
+                  data: {
+                    idres: resp.idres,
+                    idp: parseInt(key),
+                    idodes: parseInt(optionId as string),
+                  },
+                });
+              })
+            );
+            break;
+          case "date":
+            await prisma.resDate.create({
+              data: {
+                idres: resp.idres,
+                idp: parseInt(key),
+                resdate: new Date(String(value)),
+              },
+            });
+            break;
+          default:
+            console.warn(`Tipo de pregunta desconocido para la pregunta ${key}.`);
+        }
+      }
+    }
+
+    // Create associated activity
+    const activity = await prisma.actividad.create({
+      data: {
+        fFin: new Date(fFin),
+        fInit: new Date(fInit),
+        estado: "Pendiente",
+        name: name,
+        idproj: Number(idproj),
+        idres: resp.idres,
+      },
+    });
+
+    // Update project dates
+    const project = await prisma.project.findUnique({
+      where: { idproj: Number(idproj) },
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: "Proyecto no encontrado." });
+    }
+
+    const updatedFInit = project.fInit && new Date(fInit) < new Date(project.fInit) ? new Date(fInit) : project.fInit;
+    const updatedFFin = project.fFin && new Date(fFin) > new Date(project.fFin) ? new Date(fFin) : project.fFin;
+
+    if (updatedFInit !== project.fInit || updatedFFin !== project.fFin) {
+      await prisma.project.update({
+        where: { idproj: Number(idproj) },
+        data: {
+          fInit: updatedFInit,
+          fFin: updatedFFin,
+        },
+      });
+    }
+
+    res.status(201).json({
+      message: "Datos y archivos procesados correctamente.",
+      idres: resp.idres,
+      idActivity: activity.idActivi,
+    });
+  } catch (error) {
+    console.error("Error al procesar los datos:", error);
+    res.status(500).json({ error: "Error interno al procesar los datos." });
+    return;
+  }
+};
+
+
+
 export const updateAnswersAndActivity = async (req: Request, res: Response) => {
     const { responses, idproj, fInit, fFin, name, idActivity } = req.body;
 
@@ -453,10 +646,10 @@ export const updateAnswersAndActivity = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Ocurrió un error al actualizar las respuestas.' });
     }
 };
-
 export const deleteActivityAndResponses = async (req: Request, res: Response) => {
-    const { id } = req.body;
+    const { id } = req.params;
 
+    console.log(id, "id");
     if (!id) {
         return res.status(400).json({ error: 'El ID de la actividad es requerido.' });
     }
@@ -474,16 +667,31 @@ export const deleteActivityAndResponses = async (req: Request, res: Response) =>
         // Obtener el ID de las respuestas asociadas
         const idres = activity.idres;
 
-        // Eliminar todas las respuestas asociadas a esta actividad
-        await prisma.resTxt.deleteMany({ where: { idres } });
-        await prisma.resOM.deleteMany({ where: { idres } });
-        await prisma.resOU.deleteMany({ where: { idres } });
-        await prisma.resOD.deleteMany({ where: { idres } });
-        await prisma.resDate.deleteMany({ where: { idres } });
-        await prisma.resFile.deleteMany({ where: { idres } });
+        // Intentar eliminar respuestas en cada tabla
+        const deleteTables = [
+            prisma.resTxt.deleteMany({ where: { idres } }),
+            prisma.resOM.deleteMany({ where: { idres } }),
+            prisma.resOU.deleteMany({ where: { idres } }),
+            prisma.resOD.deleteMany({ where: { idres } }),
+            prisma.resDate.deleteMany({ where: { idres } }),
+            prisma.resFile.deleteMany({ where: { idres } }),
+        ];
+
+        for (const deleteOperation of deleteTables) {
+            try {
+                await deleteOperation;
+            } catch (error) {
+                console.warn('Error al eliminar registros en una tabla específica:', error);
+                // Continuar con la siguiente operación
+            }
+        }
 
         // Eliminar la respuesta principal
-        await prisma.res.delete({ where: { idres } });
+        try {
+            await prisma.res.delete({ where: { idres } });
+        } catch (error) {
+            console.warn('Error al eliminar la respuesta principal:', error);
+        }
 
         // Eliminar la actividad
         await prisma.actividad.delete({ where: { idActivi: Number(id) } });
@@ -523,12 +731,20 @@ export const deleteActivityAndResponses = async (req: Request, res: Response) =>
             },
         });
 
-        res.status(200).json({ message: 'Actividad y respuestas eliminadas correctamente.' });
+        const actividades = await prisma.actividad.findMany({
+            where:{
+                idproj: Number(project.idproj)
+            }
+        })
+
+        res.status(200).json({ message: 'Actividad y respuestas eliminadas correctamente.', actividades: actividades });
     } catch (error) {
         console.error('Error al eliminar la actividad y respuestas:', error);
         res.status(500).json({ error: 'Ocurrió un error al eliminar la actividad y respuestas.' });
     }
 };
+
+
 
 export const getNumberEstatesActivities = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
@@ -570,5 +786,90 @@ export const getNumberEstatesActivities = async (req: Request, res: Response): P
     }
 };
 
+
+export const getDataActivities = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+    try {
+        if (!id) {
+            res.status(400).json({ message: "El ID de la subunidad es requerido" });
+            return;
+        }
+
+        // Obtener los datos de la actividad
+        const dataActividad = await prisma.actividad.findFirst({
+            where: {
+                idActivi: Number(id),
+            },
+            include: {
+                res: true,
+            },
+        });
+
+        if (!dataActividad) {
+            res.status(404).json({ message: "No se encontraron actividades" });
+            return;
+        }
+
+        // Obtener las preguntas relacionadas al formulario
+        const preguntas = await prisma.prg.findMany({
+            where: {
+                idf: Number(dataActividad.res.idf),
+            },
+        });
+
+        if (!preguntas || preguntas.length === 0) {
+            res.status(404).json({ message: "No se encontraron preguntas" });
+            return;
+        }
+
+        // Acumular respuestas por tipo basado en las preguntas
+        const respuestas: Record<string, any[]> = {};
+
+        for (const pregunta of preguntas) {
+            switch (pregunta.type) {
+                case "":
+                    respuestas[pregunta.nmPrg] = await prisma.resOM.findMany({
+                        where: { idp: pregunta.idp },
+                    });
+                    break;
+                case "opcuni":
+                    respuestas[pregunta.nmPrg] = await prisma.resOU.findMany({
+                        where: { idp: pregunta.idp },
+                    });
+                    break;
+                case "opcdes":
+                    respuestas[pregunta.nmPrg] = await prisma.resOD.findMany({
+                        where: { idp: pregunta.idp },
+                    });
+                    break;
+                case "texto":
+                    respuestas[pregunta.nmPrg] = await prisma.resTxt.findMany({
+                        where: { idp: pregunta.idp },
+                    });
+                    break;
+                case "archivo":
+                    respuestas[pregunta.nmPrg] = await prisma.resFile.findMany({
+                        where: { idp: pregunta.idp },
+                    });
+                    break;
+                case "fecha":
+                    respuestas[pregunta.nmPrg] = await prisma.resDate.findMany({
+                        where: { idp: pregunta.idp },
+                    });
+                    break;
+                default:
+                    console.warn(`Tipo de pregunta no reconocido: ${pregunta.type}`);
+                    respuestas[pregunta.nmPrg] = [];
+                    break;
+            }
+        }
+
+        res.status(200).json({ dataActividad, preguntas, respuestas });
+    } catch (error) {
+        console.error("Error al obtener actividades:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
 
 

@@ -8,7 +8,7 @@ router.post('/project', upload.single('file'), createProject);
 router.get('/project/form', getQuestionsByFormActive);
 router.get('/project/graficos/:id', getActivitiesAllBySubunidad);
 router.get('/project/dona/:id', getProjectStates);
-router.put('/project/:id', updateProject);
+router.put('/project/:id',upload.single('file'), updateProject);
 router.delete('/project',deleteProject);
 //router.get('/project/graficos/:id', getProjectAllBySubunidad);
 router.get('/project/:id', getActivitysByProject);

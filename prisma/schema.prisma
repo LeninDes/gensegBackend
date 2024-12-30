@@ -52,9 +52,10 @@ model Sub_unidad {
 }
 model Usuario {
   dni                   String @db.Char(8)
-  n_usu                 String @unique
+  n_usu                 String 
   estado                Boolean @default(true)
   password              String
+  email                 String
   rol_id                Int   
   subunidad_id_subuni   Int   
   @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta

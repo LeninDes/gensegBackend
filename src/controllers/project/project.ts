@@ -38,7 +38,7 @@ export const createProject = async (req: Request, res: Response) => {
     
     // Obtener la ruta del archivo
     const planPath = req.file.path;
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`; // Construir la URL pública
+    const fileUrl = `https://2nlfx0w1-3000.brs.devtunnels.ms/uploads/${req.file.filename}`; // Construir la URL pública
     console.log(planPath, "Ruta local del archivo");
     console.log(fileUrl, "URL pública del archivo");
     console.log(planPath, "asdsa");
@@ -81,46 +81,49 @@ export const createProject = async (req: Request, res: Response) => {
 };
 
 export const updateProject = async (req: Request, res: Response) => {
-    const { plan, dni, id_rol, subunidad, EP, estado } = req.body;
+    const { EP } = req.body;
     const { id }=req.params;
 
     // Verificar que se haya enviado el ID del proyecto
-    if (!id) {
-        return res.status(400).json({ error: 'El ID del proyecto es requerido.' });
+    if (!id || !req.file) {
+        res.status(400).json({ error: 'El ID del proyecto es requerido.' });
+        return;
     }
 
     try {
+        const planPath = req.file?.path;
         // Buscar el proyecto por ID para verificar si existe
         const existingProject = await prisma.project.findUnique({
             where: { idproj: Number(id) },
         });
 
         if (!existingProject) {
-            return res.status(404).json({ error: 'El proyecto especificado no existe.' });
+            res.status(404).json({ error: 'El proyecto especificado no existe.' });
+            return;
         }
 
         // Actualizar el proyecto con los datos proporcionados
         const updatedProject = await prisma.project.update({
             where: { idproj: Number(id) },
             data: {
-                ...(plan && { plan }), // Actualiza solo si 'plan' está presente en la solicitud
-                ...(dni && { dni }),
-                ...(id_rol && { id_rol: Number(id_rol) }),
-                ...(subunidad && { subunidad_id_subuni: Number(subunidad) }),
-                ...(EP && { escuelaProfesional: EP }),
-                ...(estado && { estado }),
+                plan: planPath,
+                escuelaProfesional: EP
+                
             },
         });
 
         res.status(200).json({ message: 'Proyecto actualizado exitosamente.', project: updatedProject });
+        return;
     } catch (error) {
         console.error('Error al actualizar el proyecto:', error);
 
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            return res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error.message });
+            return;
         }
 
         res.status(500).json({ error: 'Ocurrió un error al actualizar el proyecto.' });
+        return;
     }
 };
 
@@ -163,7 +166,10 @@ export const getQuestionsByFormActive = async (req: Request, res: Response): Pro
 
     try {
         const form = await prisma.form.findFirst({ where: {estado: true}});
-
+        if(!form){
+            res.status(404).json({ message: "No existe un formulario activo" });
+            return;
+        }
         const questions = await prisma.prg.findMany({
             where: { idf: Number(form?.idf) },
             include: {
@@ -211,9 +217,11 @@ export const getQuestionsByFormActive = async (req: Request, res: Response): Pro
             };
         });
         res.status(200).json(formattedQuestions);
+        return;
     } catch (error: any) {
         console.error(error);
         res.status(500).json({ message: "Error al obtener las preguntas", error: error.message });
+        return;
     }
 };
 
@@ -253,7 +261,9 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
         // Validar que se proporciona el ID
         if (!id) {
             res.status(400).json({ message: 'El ID es obligatorio' });
+            return;
         }
+        
         // Convertir el ID a número (si es necesario)
         const projId = Number(id);
 
@@ -265,6 +275,7 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
         // Manejo si `existingSubUnidad` es null
         if (!ActivitysByProject) {
             res.status(404).json({ message: 'No existe actividades de este proyecto' });
+            return;
         }
         // Datos del projecto
         const datasProject = await prisma.project.findMany({
@@ -275,16 +286,19 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
         // Manejo si existe o es null
         if (!datasProject) {
             res.status(404).json({ message: 'No existe datos del proyecto' });
+            return;
         }
 
         // Enviar respuesta exitosa
         res.status(200).json({ message: 'Actividades del proyecto', actividades: ActivitysByProject, datos: datasProject});
+        return;
     } catch (error: any) {
         console.error(error);
         res.status(500).json({
             message: 'Hubo un error al eliminar el formulario',
             error: error.message,
         });
+        return;
     }
 
 }
@@ -395,7 +409,6 @@ export const getProjectAllBySubunidad = async (req: Request, res: Response): Pro
     }
 };
 
-
 export const getActivitiesAllBySubunidad = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
@@ -452,12 +465,16 @@ export const getActivitiesAllBySubunidad = async (req: Request, res: Response): 
         // Convertir el objeto acumulado a un array
         const transformedActivities = Object.values(monthlyAccumulation);
 
+        // Ordenar las actividades por fecha ascendente
+        transformedActivities.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
         res.status(200).json(transformedActivities);
     } catch (error) {
         console.error("Error al obtener actividades:", error);
         res.status(500).json({ message: "Error interno del servidor" });
     }
 };
+
 
 export const getProjectStates = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;

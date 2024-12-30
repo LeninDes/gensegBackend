@@ -8,8 +8,16 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const {usuario, password} = req.body;
     try {
         // VALIDAMOS EL PASSWORD Y USUARIO
-        if(!password) throw new Error('El password es obligatorio');
-        if(!usuario) throw new Error('El usuario es obligatorio');
+        if(!password) {
+            res.status(400).json({
+                message: 'La contrasenia es obligaroria'
+            })
+        };
+        if(!usuario) {
+            res.status(400).json({
+                message: 'El usuario es obligarorio'
+            })
+        };
 
         const hashedPassword = await hashPassword(password);
 

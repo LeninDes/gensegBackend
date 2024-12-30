@@ -112,9 +112,14 @@ export const loginUniqueUser = async (req: Request, res: Response): Promise<void
 
 /*---------- CREAR USUARIO -------*/
 export const createUser = async (req: Request, res: Response): Promise<void> => {
-    const { dni, usuario, password, rol_id, id_sub } = req.body;
+    const { dni, email, usuario, password, rol_id, id_sub } = req.body;
 
   try {
+    if(!dni || !usuario || !password || !rol_id || !id_sub || !email){
+      res.status(400).json({ message: "Todos los campos son obligatorios." });
+      return;
+    }
+
     // Verificar si el usuario con la misma combinación de dni, rol_id, id_sub ya existe
     const existingUser = await prisma.usuario.findUnique({
       where: {
@@ -142,6 +147,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
           dni: dni,
           n_usu: usuario,
           password: dniUser.password,
+          email: dniUser.email,
           rol_id: rol_id,
           subunidad_id_subuni: id_sub,
           estado: true,
@@ -156,6 +162,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       const newUser = await prisma.usuario.create({
         data: {
           dni: dni,
+          email: email,
           n_usu: usuario,
           password: hashedPassword,
           rol_id: rol_id,
