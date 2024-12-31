@@ -4,8 +4,8 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const createForm = async (req: Request, res: Response): Promise<void> => {
-    const { name, abrev } = req.body;
-    if (!name) {
+    const { name, abrev, idsubunidad } = req.body;
+    if (!name || !idsubunidad) {
         res.status(400).json({ error: "El nombre del formulario es obligatorio." });
       }
         const date = new Date();
@@ -13,6 +13,7 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
       try {
         const newForm = await prisma.form.create({
           data: {
+            idsubuni: idsubunidad,
             nmForm:name,
             abre: abrev,
             Fcreate: date,
@@ -48,6 +49,42 @@ export const getAllForms = async (req: Request, res: Response): Promise<void> =>
         }
 
 }
+
+export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
+
+    try{
+        if (!id) {
+            res.status(400).json({ message: 'El ID de la subunidad es obligatorio' });
+        }
+            // Consultamos todas las subunidades en la base de datos
+            const forms = await prisma.form.findMany(
+                {
+                    where: {
+                        idsubuni: Number(id),
+                    },
+                }
+            );
+
+            // Si no hay subunidades, devolvemos un mensaje
+            if (!forms || forms.length === 0) {
+                res.status(404).json({
+                    message: 'No se encontraron formularios',
+                });
+            }
+    
+            // Enviamos las subunidades encontradas
+            res.status(200).json(forms);
+        } catch (error: any) {
+            console.error(error);
+            res.status(500).json({
+                message: 'Hubo un error al obtener las subunidades',
+                error: error.message,
+            });
+        }
+
+}
+
 export const deleteForm = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
     console.log(id);

@@ -29,11 +29,12 @@ export const upload = multer({ storage });
 
 
 export const createProject = async (req: Request, res: Response) => {
-    const { dni, id_rol, subunidad, EP } = req.body;
+    const { dni, id_rol, subunidad, EP,idpe } = req.body;
 
     //console.log(req.file, "file");
-    if (!req.file || !dni || !id_rol || !subunidad || !EP) {
-        return res.status(400).json({ error: 'Todos los campos son requeridos.' });
+    if (!req.file || !dni || !id_rol || !subunidad || !EP || !idpe) {
+        res.status(400).json({ error: 'Todos los campos son requeridos.' });
+        return;
     }
     
     // Obtener la ruta del archivo
@@ -50,6 +51,7 @@ export const createProject = async (req: Request, res: Response) => {
         // Crear proyecto
         const newProject = await prisma.project.create({
             data: {
+                idpe: Number(idpe),
                 plan: planPath,
                 dni: dni,
                 id_rol: Number(id_rol),
@@ -128,11 +130,12 @@ export const updateProject = async (req: Request, res: Response) => {
 };
 
 export const deleteProject = async (req: Request, res: Response) => {
-    const { id } = req.body;
+    const { id } = req.params;
 
     // Verificar que se haya enviado el ID del proyecto
     if (!id) {
-        return res.status(400).json({ error: 'El ID del proyecto es requerido.' });
+        res.status(400).json({ error: 'El ID del proyecto es requerido.' });
+        return;
     }
 
     try {
@@ -142,7 +145,8 @@ export const deleteProject = async (req: Request, res: Response) => {
         });
 
         if (!existingProject) {
-            return res.status(404).json({ error: 'El proyecto especificado no existe.' });
+            res.status(404).json({ error: 'El proyecto especificado no existe.' });
+            return;
         }
 
         // Eliminar el proyecto
@@ -163,9 +167,9 @@ export const deleteProject = async (req: Request, res: Response) => {
 };
 
 export const getQuestionsByFormActive = async (req: Request, res: Response): Promise<void> => {
-
+    const { id } = req.params;
     try {
-        const form = await prisma.form.findFirst({ where: {estado: true}});
+        const form = await prisma.form.findFirst({ where: {estado: true, idsubuni: Number(id)} });
         if(!form){
             res.status(404).json({ message: "No existe un formulario activo" });
             return;

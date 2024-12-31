@@ -49,6 +49,7 @@ model Sub_unidad {
   n_subuni  String  @unique
   abreviatura     String
   usuarios     Usuario[]
+  form         Form[]
 }
 model Usuario {
   dni                   String @db.Char(8)
@@ -68,14 +69,17 @@ model Usuario {
 
 model Form {
   idf       Int @id @default(autoincrement())
-  nmForm    String  @unique
+  nmForm    String  
   estado    Boolean @default(false)
   abre      String?
   Fcreate   DateTime  @default(now())
   Fupdate   DateTime?
+  idsubuni  Int
+  subunidad Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
   prg       Prg[]
   res       Res[]
 }
+
 
 model Prg {
   idp       Int @id @default(autoincrement())
@@ -189,6 +193,29 @@ model ResDate {
   prg         Prg     @relation(fields: [idp], references: [idp])
 }
 
+
+model Facu {
+  idfacu    Int @id @default(autoincrement())
+  nmFacu    String
+  escuelas  Escuela[]
+}
+
+model Escuela {
+  idesc     Int @id @default(autoincrement())
+  nmEsc     String
+  idfacu    Int
+  facu      Facu @relation(fields: [idfacu], references: [idfacu])
+  prgest    PrgEstudio[]
+}
+
+model PrgEstudio {
+  idpe      Int @id @default(autoincrement())
+  nmPE      String
+  idesc     Int
+  escuela   Escuela @relation(fields: [idesc], references: [idesc])
+  project   Project[]
+}
+
 enum EstadoProyecto {
   PENDIENTE
   ARCHIVADO
@@ -205,8 +232,10 @@ model Project {
   idString              String?
   fInit                 DateTime?
   fFin                  DateTime?
+  idpe                  Int
   id_rol                Int
   subunidad_id_subuni   Int
+  prgest                PrgEstudio @relation(fields: [idpe], references: [idpe])
   usuario               Usuario @relation(fields: [dni, id_rol, subunidad_id_subuni], references: [dni, rol_id, subunidad_id_subuni])  
   actividad             Actividad[]
 }

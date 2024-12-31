@@ -18,6 +18,9 @@ import Form from './routes/project/form'
 import Preguntas from './routes/project/preguntas/pregunta'
 import Project from './routes/project/project'
 import Actividad from './routes/project/actividades'
+import Facultad from './routes/facultad/facultad'
+import Escuela from './routes/facultad/escuela'
+import PrgEstudio from './routes/facultad/prgEstudio'
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
 //--------------
@@ -45,8 +48,11 @@ app.use('/api', Permisos);
 app.use('/api', De_permisos);
 app.use('/api', Form);
 app.use('/api/form', Preguntas);
-app.use('/api/', Project);
-app.use('/api/', Actividad);
+app.use('/api', Project);
+app.use('/api', Actividad);
+app.use('/api', Facultad);
+app.use('/api', Escuela);
+app.use('/api', PrgEstudio);
 
 
 export default app;
