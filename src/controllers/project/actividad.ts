@@ -650,6 +650,9 @@ export const updateAnswersAndActivity = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Ocurrió un error al actualizar las respuestas.' });
     }
 };
+
+
+
 export const deleteActivityAndResponses = async (req: Request, res: Response) => {
     const { id } = req.params;
 
