@@ -227,7 +227,6 @@ model Project {
   idproj                Int     @id   @default(autoincrement())
   plan                  String  
   estado                String
-  escuelaProfesional    String
   dni                   String
   idString              String?
   fInit                 DateTime?

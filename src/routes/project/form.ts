@@ -5,7 +5,7 @@ const router = express.Router();
 
 /** RUTAS REGISTRO Y LOGIN */
 router.post('/form', createForm);
-router.get('/form', getAllForms);
+//router.get('/form', getAllForms);
 router.get('/form/:id', getAllFormsBySubUnidad);
 router.put('/form/:id', updateForm);
 router.delete('/form/:id', deleteForm);

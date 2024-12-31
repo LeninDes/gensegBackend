@@ -208,7 +208,6 @@ export const getUserwithDNI = async (
 ): Promise<void> => {
   try {
     const { dni } = req.params;
-    console.log("llega", dni);
     const getRoles = await prisma.usuario.findFirst({
       where: { dni: dni, estado: true },
     });

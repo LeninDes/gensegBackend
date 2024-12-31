@@ -312,9 +312,11 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
 export const createAnswersAndInsertActivityNewFormData = async (req: Request, res: Response) => {
   const { idproj, fInit, fFin, name } = req.body; // Parse text fields
   const responses = JSON.parse(req.body.responses || "{}"); // Parse JSON responses
+  const { id } = req.params;
+  const idsubunidad = Number(id);
 
-  if (!idproj || !responses || !fFin || !fInit || !name) {
-    return res.status(400).json({ error: "El ID del proyecto y las respuestas son requeridos." });
+  if (!idproj || !responses || !fFin || !fInit || !name || !idsubunidad) {
+    return res.status(400).json({ error: "El ID del proyecto, el id Sub unidad y las respuestas son requeridos." });
   }
 
   try {
@@ -326,6 +328,7 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
     const form = await prisma.form.findFirst({
       where: {
         estado: true,
+        idsubuni: Number(idsubunidad),
       },
     });
 
@@ -428,6 +431,7 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
             );
             break;
           case "date":
+            console.log("fecha", question.type , "  " , value);
             await prisma.resDate.create({
               data: {
                 idres: resp.idres,
@@ -470,8 +474,8 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
       await prisma.project.update({
         where: { idproj: Number(idproj) },
         data: {
-          fInit: updatedFInit,
-          fFin: updatedFFin,
+          fInit: new Date(),
+          fFin: new Date(),
         },
       });
     }
@@ -786,18 +790,17 @@ export const getNumberEstatesActivities = async (req: Request, res: Response): P
     }
 };
 
-
 export const getDataActivities = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
     try {
         if (!id) {
-            res.status(400).json({ message: "El ID de la subunidad es requerido" });
+            res.status(400).json({ message: "El ID de la actividad es requerido" });
             return;
         }
 
         // Obtener los datos de la actividad
-        const dataActividad = await prisma.actividad.findFirst({
+        const actividad = await prisma.actividad.findFirst({
             where: {
                 idActivi: Number(id),
             },
@@ -805,71 +808,105 @@ export const getDataActivities = async (req: Request, res: Response): Promise<vo
                 res: true,
             },
         });
+        console.log(actividad, "actividad");
 
-        if (!dataActividad) {
-            res.status(404).json({ message: "No se encontraron actividades" });
+        if (!actividad) {
+            res.status(404).json({ message: "No se encontró la actividad" });
             return;
         }
 
-        // Obtener las preguntas relacionadas al formulario
+        // Obtener las preguntas relacionadas al formulario de la actividad
         const preguntas = await prisma.prg.findMany({
             where: {
-                idf: Number(dataActividad.res.idf),
+                idf: actividad.res.idf,
+            },
+            include: {
+                opcdes: true, // Opciones para dropdown
+                opcmul: true, // Opciones para multipleChoice
+                opcuni: true, // Opciones para singleChoice
             },
         });
+        console.log(preguntas, "preguntas");
+        // Formatear las preguntas
+        const formattedPreguntas = preguntas.map((pregunta) => {
+            const formattedPregunta: any = {
+                id: pregunta.idp,
+                type: pregunta.type,
+                questionText: pregunta.nmPrg,
+            };
 
-        if (!preguntas || preguntas.length === 0) {
-            res.status(404).json({ message: "No se encontraron preguntas" });
-            return;
-        }
+            // Agregar opciones para los tipos correspondientes
+            if (pregunta.type === "dropdown") {
+                formattedPregunta.options = pregunta.opcdes.map((opcion) => ({
+                    idop: opcion.idodes,
+                    optionTxt: opcion.txtOpc,
+                }));
+            } else if (pregunta.type === "multipleChoice") {
+                formattedPregunta.options = pregunta.opcmul.map((opcion) => ({
+                    idop: opcion.idomul,
+                    optionTxt: opcion.txtOpc,
+                }));
+            } else if (pregunta.type === "singleChoice") {
+                formattedPregunta.options = pregunta.opcuni.map((opcion) => ({
+                    idop: opcion.idoUni,
+                    optionTxt: opcion.txtOpc,
+                }));
+            }
 
-        // Acumular respuestas por tipo basado en las preguntas
+            return formattedPregunta;
+        });
+
+        // Obtener las respuestas de la actividad
         const respuestas: Record<string, any[]> = {};
-
         for (const pregunta of preguntas) {
             switch (pregunta.type) {
-                case "":
-                    respuestas[pregunta.nmPrg] = await prisma.resOM.findMany({
-                        where: { idp: pregunta.idp },
+                case "multipleChoice":
+                    respuestas[pregunta.idp] = await prisma.resOM.findMany({
+                        where: { idres: actividad.res.idres },
+                        include: { opcmul: true },
                     });
                     break;
-                case "opcuni":
-                    respuestas[pregunta.nmPrg] = await prisma.resOU.findMany({
-                        where: { idp: pregunta.idp },
+                case "singleChoice":
+                    respuestas[pregunta.idp] = await prisma.resOU.findMany({
+                        where: { idres: actividad.res.idres },
+                        include: { opcuni: true },
                     });
                     break;
-                case "opcdes":
-                    respuestas[pregunta.nmPrg] = await prisma.resOD.findMany({
-                        where: { idp: pregunta.idp },
+                case "dropdown":
+                    respuestas[pregunta.idp] = await prisma.resOD.findMany({
+                        where: { idres: actividad.res.idres },
+                        include: { opcdes: true },
                     });
                     break;
-                case "texto":
-                    respuestas[pregunta.nmPrg] = await prisma.resTxt.findMany({
-                        where: { idp: pregunta.idp },
+                case "text":
+                    respuestas[pregunta.idp] = await prisma.resTxt.findMany({
+                        where: { idres: actividad.res.idres },
                     });
                     break;
                 case "archivo":
-                    respuestas[pregunta.nmPrg] = await prisma.resFile.findMany({
-                        where: { idp: pregunta.idp },
+                    respuestas[pregunta.idp] = await prisma.resFile.findMany({
+                        where: { idres: actividad.res.idres },
                     });
                     break;
                 case "fecha":
-                    respuestas[pregunta.nmPrg] = await prisma.resDate.findMany({
-                        where: { idp: pregunta.idp },
+                    respuestas[pregunta.idp] = await prisma.resDate.findMany({
+                        where: { idres: actividad.res.idres },
                     });
                     break;
                 default:
                     console.warn(`Tipo de pregunta no reconocido: ${pregunta.type}`);
-                    respuestas[pregunta.nmPrg] = [];
+                    respuestas[pregunta.idp] = [];
                     break;
             }
         }
 
-        res.status(200).json({ dataActividad, preguntas, respuestas });
+        // Devolver preguntas y respuestas
+        res.status(200).json({ preguntas: formattedPreguntas, respuestas });
     } catch (error) {
         console.error("Error al obtener actividades:", error);
         res.status(500).json({ message: "Error interno del servidor" });
     }
 };
+
 
 

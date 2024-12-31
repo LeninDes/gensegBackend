@@ -29,14 +29,14 @@ export const upload = multer({ storage });
 
 
 export const createProject = async (req: Request, res: Response) => {
-    const { dni, id_rol, subunidad, EP,idpe } = req.body;
+    const { dni, id_rol, subunidad, idpe } = req.body;
 
     //console.log(req.file, "file");
-    if (!req.file || !dni || !id_rol || !subunidad || !EP || !idpe) {
+    console.log(idpe, "idpe");
+    if (!req.file || !dni || !id_rol || !subunidad || !idpe) {
         res.status(400).json({ error: 'Todos los campos son requeridos.' });
         return;
     }
-    
     // Obtener la ruta del archivo
     const planPath = req.file.path;
     const fileUrl = `https://2nlfx0w1-3000.brs.devtunnels.ms/uploads/${req.file.filename}`; // Construir la URL pública
@@ -57,7 +57,6 @@ export const createProject = async (req: Request, res: Response) => {
                 id_rol: Number(id_rol),
                 subunidad_id_subuni: Number(subunidad),
                 estado: "Pendiente",// actualizar este estado posteriormente
-                escuelaProfesional: EP
             },
         });
 
@@ -83,11 +82,10 @@ export const createProject = async (req: Request, res: Response) => {
 };
 
 export const updateProject = async (req: Request, res: Response) => {
-    const { EP } = req.body;
+    const { idpe } = req.body;
     const { id }=req.params;
-
     // Verificar que se haya enviado el ID del proyecto
-    if (!id || !req.file) {
+    if (!id) {
         res.status(400).json({ error: 'El ID del proyecto es requerido.' });
         return;
     }
@@ -109,8 +107,7 @@ export const updateProject = async (req: Request, res: Response) => {
             where: { idproj: Number(id) },
             data: {
                 plan: planPath,
-                escuelaProfesional: EP
-                
+                idpe: Number(idpe),
             },
         });
 
@@ -282,9 +279,12 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
             return;
         }
         // Datos del projecto
-        const datasProject = await prisma.project.findMany({
+        const datasProject = await prisma.project.findFirst({
             where:{
                 idproj: projId
+            },
+            include:{
+                prgest: true
             }
         })
         // Manejo si existe o es null
@@ -294,7 +294,7 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
         }
 
         // Enviar respuesta exitosa
-        res.status(200).json({ message: 'Actividades del proyecto', actividades: ActivitysByProject, datos: datasProject});
+        res.status(200).json({ message: 'Actividades del proyecto', actividades: ActivitysByProject, datasProject});
         return;
     } catch (error: any) {
         console.error(error);
@@ -327,7 +327,6 @@ export const getProjectByUserSubUnidad = async (req: Request, res: Response): Pr
             select:{
                 idproj:true,
                 estado: true,
-                escuelaProfesional: true,
                 idString: true,
                 fFin: true,
                 fInit: true

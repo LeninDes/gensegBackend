@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { sub } from "date-fns";
 
 const prisma = new PrismaClient();
 
@@ -56,12 +57,13 @@ export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promi
     try{
         if (!id) {
             res.status(400).json({ message: 'El ID de la subunidad es obligatorio' });
+            return;
         }
             // Consultamos todas las subunidades en la base de datos
             const forms = await prisma.form.findMany(
                 {
                     where: {
-                        idsubuni: Number(id),
+                        idsubuni: Number(id)
                     },
                 }
             );
@@ -71,16 +73,19 @@ export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promi
                 res.status(404).json({
                     message: 'No se encontraron formularios',
                 });
+                return;
             }
     
             // Enviamos las subunidades encontradas
             res.status(200).json(forms);
+            return;
         } catch (error: any) {
             console.error(error);
             res.status(500).json({
                 message: 'Hubo un error al obtener las subunidades',
                 error: error.message,
             });
+            return;
         }
 
 }

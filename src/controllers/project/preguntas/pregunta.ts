@@ -28,6 +28,17 @@ export const handleDynamicQuestions = async (req: Request, res: Response): Promi
     
     try {
         // Iterar sobre cada pregunta en el JSON
+        console.log(questions, "Preguntassdada");
+        const form = await prisma.form.findFirst({
+        where: {
+            idf: Number(idf),
+        },
+        });
+        
+        if (!form) {
+            res.status(404).json({ message: 'El formulario no existe' });
+            return;
+        }
         for (const question of questions) {
             const { type, questionText, options } = question;
 
@@ -132,6 +143,98 @@ export const handleDynamicQuestions = async (req: Request, res: Response): Promi
 };
 
 
+export const EnviarDynamicQuestions = async (req: Request, res: Response): Promise<void> => {
+    const { idf, questions } = req.body; // Recibimos el JSON desde el frontend
+
+    try {
+        // Validación básica de entrada
+        if (!idf || !questions || !Array.isArray(questions)) {
+            res.status(400).json({ message: 'El ID de formulario (idf) y las preguntas son obligatorios.' });
+            return;
+        }
+
+        // Iterar sobre las preguntas del JSON
+        for (const question of questions) {
+            const { id, type, text: questionText, options } = question;
+
+            // Validación de campos individuales
+            if (!type || !questionText) {
+                res.status(400).json({ message: `Faltan campos obligatorios en la pregunta con ID: ${id}` });
+                return;
+            }
+
+            if (type === 'text') {
+                // Guardar pregunta de texto
+                await prisma.prg.create({
+                    data: {
+                        idf: Number(idf),
+                        nmPrg: questionText,
+                        type,
+                    },
+                });
+            } else if (type === 'multipleChoice') {
+                // Guardar pregunta de opción múltiple
+                const newQuestion = await prisma.prg.create({
+                    data: {
+                        idf: Number(idf),
+                        nmPrg: questionText,
+                        type,
+                    },
+                });
+
+                // Guardar opciones asociadas
+                if (options && options.length > 0) {
+                    await prisma.opcMul.createMany({
+                        data: options.map((option: string) => ({
+                            idp: newQuestion.idp,
+                            txtOpc: option,
+                        })),
+                    });
+                }
+            } else if (type === 'dropdown') {
+                // Guardar pregunta de tipo desplegable
+                const newQuestion = await prisma.prg.create({
+                    data: {
+                        idf: Number(idf),
+                        nmPrg: questionText,
+                        type,
+                    },
+                });
+
+                // Guardar opciones asociadas
+                if (options && options.length > 0) {
+                    await prisma.opcDes.createMany({
+                        data: options.map((option: string) => ({
+                            idp: newQuestion.idp,
+                            txtOpc: option,
+                        })),
+                    });
+                }
+            } else if (type === 'date' || type === 'archive') {
+                // Guardar pregunta de tipo fecha o archivo
+                await prisma.prg.create({
+                    data: {
+                        idf: Number(idf),
+                        nmPrg: questionText,
+                        type,
+                    },
+                });
+            } else {
+                // Tipo de pregunta no soportado
+                res.status(400).json({ message: `Tipo de pregunta no soportado: ${type}` });
+                return;
+            }
+        }
+
+        // Respuesta exitosa si todas las preguntas se procesan correctamente
+        res.status(201).json({ message: 'Preguntas guardadas exitosamente' });
+    } catch (error: any) {
+        // Manejo de errores
+        console.error('Error al guardar preguntas:', error);
+        res.status(500).json({ message: 'Error al procesar las preguntas', error: error.message });
+    }
+};
+
 export const getQuestionsByForm = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
@@ -188,31 +291,33 @@ export const getQuestionsByForm = async (req: Request, res: Response): Promise<v
         res.status(500).json({ message: "Error al obtener las preguntas", error: error.message });
     }
 };
-
 export const updateQuestionsByForm = async (req: Request, res: Response) => {
-    const { questions } = req.body; // Recibe el ID del formulario y las preguntas
+    const { questions } = req.body; // Recibe las preguntas del formulario
     const { id } = req.params;
     const idfor = Number(id);
-    console.log(questions);
+
     if (!idfor || !questions) {
         return res.status(400).json({ error: 'El ID del formulario y las preguntas son requeridos.' });
     }
 
     try {
         for (const question of questions) {
-            const { id, type, questionText, options } = question;
+            const { id: questionId, type, text, options = [] } = question; // Renombrar questionText a text
+
+            // Asegúrate de que el ID sea un número o null si no está presente
+            const numericId = questionId ? Number(questionId) : undefined;
 
             // Actualizar o crear la pregunta
             const updatedQuestion = await prisma.prg.upsert({
-                where: { idp: id || 0 }, // Si no hay ID, se crea una nueva pregunta
+                where: { idp: numericId || 0 }, // Si no hay ID, se crea una nueva pregunta
                 update: {
                     type: type,
-                    nmPrg: questionText,
+                    nmPrg: text, // Cambiar a text
                 },
                 create: {
-                    idf: Number(idfor),
+                    idf: idfor,
                     type: type,
-                    nmPrg: questionText,
+                    nmPrg: text, // Cambiar a text
                 },
             });
 
@@ -222,18 +327,18 @@ export const updateQuestionsByForm = async (req: Request, res: Response) => {
             } else if (type === 'singleChoice') {
                 await prisma.opcUni.deleteMany({ where: { idp: updatedQuestion.idp } });
             } else if (type === 'dropdown') {
-                await prisma.opcDes.deleteMany({ where: { idp: updatedQuestion.idp} });
+                await prisma.opcDes.deleteMany({ where: { idp: updatedQuestion.idp } });
             }
 
-            // Crear nuevas opciones
-            if (options && options.length > 0) {
+            // Crear nuevas opciones (si el tipo las requiere)
+            if (options && Array.isArray(options) && options.length > 0) {
                 const optionsData = options.map((option: string) => ({
                     idp: updatedQuestion.idp,
                     txtOpc: option,
                 }));
 
                 if (type === 'multipleChoice') {
-                    await prisma.opcMul.createMany({data: optionsData});
+                    await prisma.opcMul.createMany({ data: optionsData });
                 } else if (type === 'singleChoice') {
                     await prisma.opcUni.createMany({ data: optionsData });
                 } else if (type === 'dropdown') {

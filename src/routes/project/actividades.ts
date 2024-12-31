@@ -4,7 +4,7 @@ import { upload, getDataActivities, createAnswersAndInsertActivity, probar, crea
 const router = express.Router();
 
 /** RUTAS REGISTRO Y LOGIN */
-router.post('/actividad', upload.any(), createAnswersAndInsertActivityNewFormData);
+router.post('/actividad/:id', upload.any(), createAnswersAndInsertActivityNewFormData);
 router.get('/actividad/:id', getDataActivities);
 //router.post('/actividad', createAnswersAndInsertActivity);
 router.put('/actividad/:id', updateAnswersAndActivity);
