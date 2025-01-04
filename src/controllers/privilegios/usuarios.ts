@@ -17,13 +17,13 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!usuario || !password) {
       res.status(400).json({
-        message: "El usuario y la contraseña son obligatorios",
+        message: "El email y la contraseña son obligatorios",
       });
       return;
     }
 
     // Buscar el usuario por nombre de usuario (n_usu)
-    const existingUser = await prisma.usuario.findFirst({where: { n_usu: usuario },});
+    const existingUser = await prisma.usuario.findFirst({where: { email: usuario },});
 
     
     // si no existe el usuario buscamos en la tabla user que sond de administrador general
@@ -52,10 +52,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       
       if (!isPasswordValid) {res.status(401).json({message: "Credenciales incorrectas",});return;}
 
-      const users = await prisma.usuario.findMany({where: { n_usu: usuario, estado: true }, 
+      const users = await prisma.usuario.findMany({where: { email: usuario, estado: true }, 
         select: {
           dni: true,
           n_usu: true,
+          email: true,
           rol_id: true,
           subunidad_id_subuni: true,
           rol: {select: { id_rol:true, n_rol: true}},
@@ -79,23 +80,23 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const loginUniqueUser = async (req: Request, res: Response): Promise<void> => {
-  const {dni,n_usu,rol_id,subunidad_id_subuni} = req.body;
+  const {dni,email,rol_id,subunidad_id_subuni} = req.body;
   try {
-    if (!dni || !n_usu || !rol_id || !subunidad_id_subuni) {
+    if (!dni || !email || !rol_id || !subunidad_id_subuni) {
       res.status(400).json({
         message: "Todos los campos son obligatorios",
       });
       return;
     }
     // Buscar el usuario por nombre de usuario (n_usu)
-    const existingUser = await prisma.usuario.findFirst({where: { dni, n_usu, rol_id, subunidad_id_subuni,estado:true },});
+    const existingUser = await prisma.usuario.findFirst({where: { dni, email: email, rol_id, subunidad_id_subuni,estado:true },});
 
       if(!existingUser){
         res.status(404).json({error: 'Usuario no encontrado'});
         return;
       }
 
-      const token = jwt.sign({ dni: existingUser.dni, n_usu: existingUser.n_usu, rol_id: rol_id,subunidad: subunidad_id_subuni  },SECRET_KEY,{ expiresIn: "1h" });
+      const token = jwt.sign({ dni: existingUser.dni, email: existingUser.email, rol_id: rol_id,subunidad: subunidad_id_subuni  },SECRET_KEY,{ expiresIn: "1h" });
       res.status(200).json({message: "user",admin: false, token});
       return;
     
@@ -112,10 +113,10 @@ export const loginUniqueUser = async (req: Request, res: Response): Promise<void
 
 /*---------- CREAR USUARIO -------*/
 export const createUser = async (req: Request, res: Response): Promise<void> => {
-    const { dni, email, usuario, password, rol_id, id_sub } = req.body;
+    const { dni, email, usuario, password, rol_id, id_sub, idpe } = req.body;
 
   try {
-    if(!dni || !usuario || !password || !rol_id || !id_sub || !email){
+    if(!dni || !usuario || !password || !rol_id || !id_sub || !email || !idpe){
       res.status(400).json({ message: "Todos los campos son obligatorios." });
       return;
     }
@@ -125,32 +126,35 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       where: {
         dni_rol_id_subunidad_id_subuni: {
           dni: dni,
-          rol_id: rol_id,
-          subunidad_id_subuni: id_sub,
+          rol_id: Number(rol_id),
+          subunidad_id_subuni: Number(id_sub),
+
         },
       },
     });
+    
+    if (existingUser) {
+      res.status(400).json({ message: "El usuario con este rol y subunidad ya existe." });
+      return;
+    }
+
     const dniUser = await prisma.usuario.findFirst({
       where: {
         dni: dni,
       },
     });
 
-    if (existingUser) {
-      res
-        .status(400)
-        .json({ message: "El usuario con este rol y subunidad ya existe." });
-    }
     if (dniUser) {
       const newUser = await prisma.usuario.create({
         data: {
-          dni: dni,
-          n_usu: usuario,
+          dni: dniUser.dni,
+          n_usu: dniUser.n_usu,
           password: dniUser.password,
           email: dniUser.email,
-          rol_id: rol_id,
-          subunidad_id_subuni: id_sub,
+          rol_id: Number(rol_id),
+          subunidad_id_subuni: Number(id_sub),
           estado: true,
+          idpe: dniUser.idpe,
         },
       });
       res
@@ -161,22 +165,23 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       // Crear el nuevo usuario
       const newUser = await prisma.usuario.create({
         data: {
+          idpe: Number(idpe),
           dni: dni,
           email: email,
           n_usu: usuario,
           password: hashedPassword,
-          rol_id: rol_id,
-          subunidad_id_subuni: id_sub,
+          rol_id: Number(rol_id),
+          subunidad_id_subuni: Number(id_sub),
           estado: true,
         },
       });
-      res
-        .status(201)
-        .json({ message: "Usuario creado correctamente.", newUser });
+      res.status(201).json({ message: "Usuario creado correctamente.", newUser });
+      return;
     }
   } catch (error) {
     //console.error(error);
     res.status(500).json({ message: "Error al crear el usuario.", error });
+    return;
   } finally {
     await prisma.$disconnect();
   }
@@ -277,7 +282,7 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
   try {
     // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
     const users = await prisma.usuario.findFirst({
-      where: { dni: user.dni, n_usu: user.n_usu, rol_id: user.rol_id, subunidad_id_subuni:user.subunidad_id_subuni, estado:true },
+      where: { dni: user.dni, email: user.email, rol_id: user.rol_id, subunidad_id_subuni:user.subunidad_id_subuni, estado:true },
       
     }); 
     if (!users) {

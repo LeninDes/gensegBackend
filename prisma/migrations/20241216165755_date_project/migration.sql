@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `project` ADD COLUMN `fFin` DATETIME(3) NULL,
-    ADD COLUMN `fInit` DATETIME(3) NULL;

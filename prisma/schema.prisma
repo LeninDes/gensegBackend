@@ -9,8 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("POSTGRESDB_URL")
 }
 
 // USUARIO ADMINIDTRADOR
@@ -57,11 +57,13 @@ model Usuario {
   estado                Boolean @default(true)
   password              String
   email                 String
+  idpe                  Int
   rol_id                Int   
   subunidad_id_subuni   Int   
   @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta
   rol       Rol         @relation(fields: [rol_id], references: [id_rol])
   sub_uni   Sub_unidad  @relation(fields: [subunidad_id_subuni], references: [id_subuni])
+  prgest    PrgEstudio  @relation(fields: [idpe], references: [idpe])
   proyectos             Project[]
 }
 
@@ -197,6 +199,7 @@ model ResDate {
 model Facu {
   idfacu    Int @id @default(autoincrement())
   nmFacu    String
+  abrev     String?
   escuelas  Escuela[]
 }
 
@@ -204,6 +207,7 @@ model Escuela {
   idesc     Int @id @default(autoincrement())
   nmEsc     String
   idfacu    Int
+  abrev     String?
   facu      Facu @relation(fields: [idfacu], references: [idfacu])
   prgest    PrgEstudio[]
 }
@@ -212,8 +216,10 @@ model PrgEstudio {
   idpe      Int @id @default(autoincrement())
   nmPE      String
   idesc     Int
+  abrev     String?
   escuela   Escuela @relation(fields: [idesc], references: [idesc])
-  project   Project[]
+  usuario   Usuario[]
+
 }
 
 enum EstadoProyecto {
@@ -231,10 +237,8 @@ model Project {
   idString              String?
   fInit                 DateTime?
   fFin                  DateTime?
-  idpe                  Int
   id_rol                Int
   subunidad_id_subuni   Int
-  prgest                PrgEstudio @relation(fields: [idpe], references: [idpe])
   usuario               Usuario @relation(fields: [dni, id_rol, subunidad_id_subuni], references: [dni, rol_id, subunidad_id_subuni])  
   actividad             Actividad[]
 }

@@ -140,9 +140,18 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
     }
 
     try {
+        const existeProject = await prisma.project.findUnique({
+            where: { idproj },
+        });
+        if (!existeProject) {
+            res.status(404).json({ error: 'El proyecto especificado no existe.' });
+            return;
+        }
+
         const form = await prisma.form.findFirst({
             where: {
                 estado: true,
+                idsubuni: Number(existeProject.subunidad_id_subuni),
             }
         });
         if (!form) {

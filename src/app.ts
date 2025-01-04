@@ -21,15 +21,15 @@ import Actividad from './routes/project/actividades'
 import Facultad from './routes/facultad/facultad'
 import Escuela from './routes/facultad/escuela'
 import PrgEstudio from './routes/facultad/prgEstudio'
-import swaggerUi from 'swagger-ui-express';
-import yaml from 'yamljs';
+//import swaggerUi from 'swagger-ui-express';
+//import yaml from 'yamljs';
 //--------------
 // APP CON EXPRESS
 const app = express()
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Parsear archivos YAML
-const swaggerDocument = yaml.load('./swagger.yaml');
+//const swaggerDocument = yaml.load('./swagger.yaml');
 
 app.use(express.json());
 
@@ -38,7 +38,7 @@ app.use(cors());
 
 // RUTAS
 // Ruta para servir la documentación
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+//app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/auth', authRoutes);
 app.use('/api/auth', Usuarios);

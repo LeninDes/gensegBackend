@@ -29,11 +29,10 @@ export const upload = multer({ storage });
 
 
 export const createProject = async (req: Request, res: Response) => {
-    const { dni, id_rol, subunidad, idpe } = req.body;
+    const { dni, id_rol, subunidad } = req.body;
 
     //console.log(req.file, "file");
-    console.log(idpe, "idpe");
-    if (!req.file || !dni || !id_rol || !subunidad || !idpe) {
+    if (!req.file || !dni || !id_rol || !subunidad) {
         res.status(400).json({ error: 'Todos los campos son requeridos.' });
         return;
     }
@@ -47,11 +46,9 @@ export const createProject = async (req: Request, res: Response) => {
     date.setHours(date.getHours() - 5);
 
     try {
-        
         // Crear proyecto
         const newProject = await prisma.project.create({
             data: {
-                idpe: Number(idpe),
                 plan: planPath,
                 dni: dni,
                 id_rol: Number(id_rol),
@@ -82,7 +79,6 @@ export const createProject = async (req: Request, res: Response) => {
 };
 
 export const updateProject = async (req: Request, res: Response) => {
-    const { idpe } = req.body;
     const { id }=req.params;
     // Verificar que se haya enviado el ID del proyecto
     if (!id) {
@@ -107,7 +103,6 @@ export const updateProject = async (req: Request, res: Response) => {
             where: { idproj: Number(id) },
             data: {
                 plan: planPath,
-                idpe: Number(idpe),
             },
         });
 
@@ -283,9 +278,6 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
             where:{
                 idproj: projId
             },
-            include:{
-                prgest: true
-            }
         })
         // Manejo si existe o es null
         if (!datasProject) {

@@ -12,11 +12,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({
                 message: 'La contrasenia es obligaroria'
             })
+            return;
         };
         if(!usuario) {
             res.status(400).json({
                 message: 'El usuario es obligarorio'
             })
+            return;
         };
 
         const hashedPassword = await hashPassword(password);
@@ -33,7 +35,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         // Generarmos el token
         const token = generateToken(user)
         res.status(201).json({token});
-        
+        return;
     } catch (error: any) {
         // TODO para manejar los errores
 
@@ -42,6 +44,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({
                 message: 'El uusario es obligatorio'
             })
+            return;
         }
         
         //VALIDAR EL PASSWORD
@@ -49,6 +52,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({
                 message: 'La contrasenia es obligaroria'
             })
+            return;
         }
 
         // VALIDAR DUPLICIDAD
@@ -56,6 +60,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             res.status(500).json({
                 message: 'El usuario ya existe'
             })
+            return;
         }
 
         //Mejorar los errores 
@@ -63,6 +68,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({
             error: 'Hubo un error en el registro'
         })
+        return;
     }
 }
 
