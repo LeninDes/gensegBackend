@@ -141,7 +141,7 @@ export const deleteForm = async (req: Request, res: Response): Promise<void> => 
 
 export const updateForm = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
-    const { name , abrev} = req.body; //
+    const { name , abrev, estado} = req.body; //
 
     try {
         // Validar que se proporciona el ID
@@ -174,6 +174,7 @@ export const updateForm = async (req: Request, res: Response): Promise<void> => 
                 nmForm: name,
                 abre: abrev,
                 Fupdate: date,
+                estado: estado,
             },
         });
 

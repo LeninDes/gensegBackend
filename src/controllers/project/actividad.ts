@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import multer from 'multer';
+import { connect } from "http2";
 
 const prisma = new PrismaClient();
 
@@ -141,7 +142,7 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
 
     try {
         const existeProject = await prisma.project.findUnique({
-            where: { idproj },
+            where: { idproj:Number(idproj), },
         });
         if (!existeProject) {
             res.status(404).json({ error: 'El proyecto especificado no existe.' });
@@ -167,7 +168,7 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
         });
 
         // Iterar sobre las respuestas y guardarlas
-        const savedResponses = await Promise.all(
+        await Promise.all(
             Object.entries(responses).map(async ([questionId, answer]) => {
                 const questionIdInt = parseInt(questionId); // Convertir la clave a un entero
                 const answerString = Array.isArray(answer) ? JSON.stringify(answer) : String(answer); // Manejar arrays
@@ -272,31 +273,35 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
             }
         });
 
-        // cambiar la decha de inicio del proyecto respecto a las actividades insertadas
+        // cambiar la fecha de inicio del proyecto respecto a las actividades insertadas
         const project = await prisma.project.findUnique({
             where:{
-                idproj:idproj
+                idproj:Number(idproj)
             }
         })
 
         // Verifica si el proyecto existe
-        if (!project) {
+        if (!existeProject) {
             return res.status(404).json({ message: "Project not found" });
         }
+
+        console.log(existeProject, "Projecto encontrado");
         
-        let updatedFInit = project.fInit;
-        if (!project.fInit || new Date(fInit) < new Date(project.fInit)) {
+        let updatedFInit = existeProject.fInit;
+        if (!existeProject.fInit || new Date(fInit) < new Date(existeProject.fInit)) {
             updatedFInit = new Date(fInit);
         }
 
         // Comprobar y actualizar la fecha final
-        let updatedFFin = project.fFin;
-        if (!project.fFin || new Date(fFin) > new Date(project.fFin)) {
+        let updatedFFin = existeProject.fFin;
+        if (!existeProject.fFin || new Date(fFin) > new Date(existeProject.fFin)) {
             updatedFFin = new Date(fFin);
         }
 
+        console.log(updatedFInit, "updatedFInit");
+        console.log(updatedFFin, "updatedFFin");
         // Actualizar el proyecto solo si las fechas cambiaron
-        if (updatedFInit !== project.fInit || updatedFFin !== project.fFin) {
+        if (updatedFInit !== existeProject.fInit || updatedFFin !== existeProject.fFin) {
             await prisma.project.update({
                 where: { idproj },
                 data: {
@@ -312,6 +317,7 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
             idres: resp.idres, 
             idActivity: activity.idActivi 
         });
+        return;
     } catch (error) {
         console.error('Error al guardar las respuestas:', error);
         res.status(500).json({ error: 'Ocurrió un error al guardar las respuestas.' });
@@ -323,6 +329,7 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
   const responses = JSON.parse(req.body.responses || "{}"); // Parse JSON responses
   const { id } = req.params;
   const idsubunidad = Number(id);
+  console.log();
 
   if (!idproj || !responses || !fFin || !fInit || !name || !idsubunidad) {
     return res.status(400).json({ error: "El ID del proyecto, el id Sub unidad y las respuestas son requeridos." });
@@ -342,7 +349,8 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
     });
 
     if (!form) {
-      return res.status(400).json({ error: "No hay ningún formulario activo." });
+      res.status(400).json({ error: "No hay ningún formulario activo." });
+      return;
     }
 
     const idf = form.idf;
@@ -354,6 +362,7 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
         date: new Date(),
       },
     });
+    console.log(resp, "resp");
 
     // Process responses
     for (const [key, value] of Object.entries(responses)) {
@@ -414,13 +423,14 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
             );
             break;
           case "singleChoice":
+              console.log(answer, "answer");
             await Promise.all(
               answer.map(async (optionId) => {
                 await prisma.resOU.create({
                   data: {
-                    idres: resp.idres,
-                    idp: parseInt(key),
-                    idou: parseInt(optionId as string),
+                    idres: Number(resp.idres),
+                    idp: Number(key),
+                    idou: Number(optionId)
                   },
                 });
               })
@@ -440,12 +450,13 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
             );
             break;
           case "date":
-            console.log("fecha", question.type , "  " , value);
+            const fecha = new Date(String(value));
+            console.log("fecha", question.type , "  " , fecha);
             await prisma.resDate.create({
               data: {
                 idres: resp.idres,
                 idp: parseInt(key),
-                resdate: new Date(String(value)),
+                resdate: fecha,
               },
             });
             break;
@@ -455,6 +466,15 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
       }
     }
 
+    // Update project dates
+    const project = await prisma.project.findUnique({
+      where: { idproj: Number(idproj) },
+    });
+    
+    if (!project) {
+      res.status(404).json({ error: "Proyecto no encontrado." });
+      return;
+    }
     // Create associated activity
     const activity = await prisma.actividad.create({
       data: {
@@ -462,31 +482,42 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
         fInit: new Date(fInit),
         estado: "Pendiente",
         name: name,
-        idproj: Number(idproj),
+        idproj: project.idproj,
         idres: resp.idres,
       },
     });
 
-    // Update project dates
-    const project = await prisma.project.findUnique({
-      where: { idproj: Number(idproj) },
-    });
 
+
+    // Verifica si el proyecto existe
     if (!project) {
-      return res.status(404).json({ error: "Proyecto no encontrado." });
+        return res.status(404).json({ message: "Project not found" });
     }
 
-    const updatedFInit = project.fInit && new Date(fInit) < new Date(project.fInit) ? new Date(fInit) : project.fInit;
-    const updatedFFin = project.fFin && new Date(fFin) > new Date(project.fFin) ? new Date(fFin) : project.fFin;
+    console.log(project, "Projecto encontrado");
+    
+    let updatedFInit = project.fInit;
+    if (!project.fInit || new Date(fInit) < new Date(project.fInit)) {
+        updatedFInit = new Date(fInit);
+    }
 
+    // Comprobar y actualizar la fecha final
+    let updatedFFin = project.fFin;
+    if (!project.fFin || new Date(fFin) > new Date(project.fFin)) {
+        updatedFFin = new Date(fFin);
+    }
+
+    console.log(updatedFInit, "updatedFInit");
+    console.log(updatedFFin, "updatedFFin");
+    // Actualizar el proyecto solo si las fechas cambiaron
     if (updatedFInit !== project.fInit || updatedFFin !== project.fFin) {
-      await prisma.project.update({
-        where: { idproj: Number(idproj) },
-        data: {
-          fInit: new Date(),
-          fFin: new Date(),
-        },
-      });
+        await prisma.project.update({
+            where: {idproj: Number(idproj) },
+            data: {
+                fInit: updatedFInit,
+                fFin: updatedFFin,
+            },
+        });
     }
 
     res.status(201).json({
@@ -895,12 +926,12 @@ export const getDataActivities = async (req: Request, res: Response): Promise<vo
                         where: { idres: actividad.res.idres },
                     });
                     break;
-                case "archivo":
+                case "archive":
                     respuestas[pregunta.idp] = await prisma.resFile.findMany({
                         where: { idres: actividad.res.idres },
                     });
                     break;
-                case "fecha":
+                case "date":
                     respuestas[pregunta.idp] = await prisma.resDate.findMany({
                         where: { idres: actividad.res.idres },
                     });
@@ -913,7 +944,7 @@ export const getDataActivities = async (req: Request, res: Response): Promise<vo
         }
 
         // Devolver preguntas y respuestas
-        res.status(200).json({ preguntas: formattedPreguntas, respuestas });
+        res.status(200).json({ preguntas: formattedPreguntas, respuestas, actividad });
     } catch (error) {
         console.error("Error al obtener actividades:", error);
         res.status(500).json({ message: "Error interno del servidor" });

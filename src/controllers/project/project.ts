@@ -39,9 +39,9 @@ export const createProject = async (req: Request, res: Response) => {
     // Obtener la ruta del archivo
     const planPath = req.file.path;
     const fileUrl = `https://2nlfx0w1-3000.brs.devtunnels.ms/uploads/${req.file.filename}`; // Construir la URL pública
-    console.log(planPath, "Ruta local del archivo");
-    console.log(fileUrl, "URL pública del archivo");
-    console.log(planPath, "asdsa");
+    //console.log(planPath, "Ruta local del archivo");
+    //console.log(fileUrl, "URL pública del archivo");
+    //console.log(planPath, "asdsa");
     const date = new Date();
     date.setHours(date.getHours() - 5);
 
@@ -65,7 +65,7 @@ export const createProject = async (req: Request, res: Response) => {
                 idString: String(1000+newProject.idproj)
             }
         })
-
+        console.log(newProject, "Proyecto creado exitosamente");
         res.status(201).json({ message: 'Proyecto creado exitosamente.', project: newProject, idproj: newProject.idproj, url:fileUrl });
     } catch (error) {
         console.error('Error al crear el proyecto:', error);
@@ -284,9 +284,28 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
             res.status(404).json({ message: 'No existe datos del proyecto' });
             return;
         }
+        const user = await prisma.usuario.findFirst({
+            where:{
+                dni: datasProject.dni
+            }
+        })
+        if(!user){
+            res.status(404).json({ message: 'No existe usuario' });
+            return;
+        }
+        const prgest = await prisma.prgEstudio.findFirst({  
+            where: { idpe: user.idpe },
+        });
+        if(!prgest){
+            res.status(404).json({ message: 'No existe prgestudio' });
+            return;
+        }
+
+
+        
 
         // Enviar respuesta exitosa
-        res.status(200).json({ message: 'Actividades del proyecto', actividades: ActivitysByProject, datasProject});
+        res.status(200).json({ message: 'Actividades del proyecto', actividades: ActivitysByProject, datasProject, prgest});
         return;
     } catch (error: any) {
         console.error(error);
