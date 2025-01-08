@@ -15,7 +15,7 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
       try {
         const newForm = await prisma.form.create({
           data: {
-            idsubuni: idsubunidad,
+            idsubuni: Number(idsubunidad),
             nmForm:name,
             abre: abrev,
             Fcreate: date,
@@ -148,6 +148,14 @@ export const updateForm = async (req: Request, res: Response): Promise<void> => 
         if (!id) {
             res.status(400).json({ message: 'El ID del formulario es obligatorio' });
         }
+        let estad = Boolean(estado);
+        if (!estado) {
+            estad = false;
+        }
+        else {  
+            estad = true;
+        }
+        console.log(name, "name ", abrev, "abrev ", estado, "estado");
 
         // Validar que se proporciona al menos un campo para actualizar
         if (!name && !abrev) {
@@ -174,7 +182,7 @@ export const updateForm = async (req: Request, res: Response): Promise<void> => 
                 nmForm: name,
                 abre: abrev,
                 Fupdate: date,
-                estado: estado,
+                estado: estad,
             },
         });
 

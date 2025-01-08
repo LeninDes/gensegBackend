@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { PrismaClient, Usuario } from "@prisma/client";
+import { emit } from "process";
 
 const prisma = new PrismaClient();
 dotenv.config();
@@ -12,10 +13,10 @@ const SECRET_KEY = process.env.JWT_SECRET || 'secret';  // Define una secret lla
 
 /*---------- METODO LOGIN -------*/
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
-  const { usuario, password } = req.body; // Desestructurar usuario y contraseña
+  const { email, password } = req.body; // Desestructurar usuario y contraseña
 
   try {
-    if (!usuario || !password) {
+    if (!email || !password) {
       res.status(400).json({
         message: "El email y la contraseña son obligatorios",
       });
@@ -23,12 +24,12 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Buscar el usuario por nombre de usuario (n_usu)
-    const existingUser = await prisma.usuario.findFirst({where: { email: usuario },});
+    const existingUser = await prisma.usuario.findFirst({where: { email: email },});
 
     
     // si no existe el usuario buscamos en la tabla user que sond de administrador general
     if (!existingUser) {
-      const user = await prisma.user.findUnique({where: {usuario}});
+      const user = await prisma.user.findUnique({where: {usuario: email}});
       if(!user){
         res.status(404).json({error: 'Usuario no encontrado'});
         return;
@@ -52,7 +53,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       
       if (!isPasswordValid) {res.status(401).json({message: "Credenciales incorrectas",});return;}
 
-      const users = await prisma.usuario.findMany({where: { email: usuario, estado: true }, 
+      const users = await prisma.usuario.findMany({where: { email: email, estado: true }, 
         select: {
           dni: true,
           n_usu: true,

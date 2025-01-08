@@ -325,11 +325,13 @@ export const createAnswersAndInsertActivity = async (req: Request, res: Response
 };
 
 export const createAnswersAndInsertActivityNewFormData = async (req: Request, res: Response) => {
-  const { idproj, fInit, fFin, name } = req.body; // Parse text fields
+  const { idproj, name } = req.body; // Parse text fields
+  const fInit = new Date(req.body.fInit); // Parse date fields
+  const fFin = new Date(req.body.fFin); // Parse date fields
   const responses = JSON.parse(req.body.responses || "{}"); // Parse JSON responses
   const { id } = req.params;
   const idsubunidad = Number(id);
-  console.log();
+  
 
   if (!idproj || !responses || !fFin || !fInit || !name || !idsubunidad) {
     return res.status(400).json({ error: "El ID del proyecto, el id Sub unidad y las respuestas son requeridos." });
@@ -337,7 +339,7 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
 
   try {
     console.log(responses, "responses");
-
+    
     console.log("Archivos recibidos:", req.files);
     console.log("Body recibido:", req.body);
     // Get the active form
@@ -366,6 +368,9 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
 
     // Process responses
     for (const [key, value] of Object.entries(responses)) {
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        continue; // Skip empty responses
+      }
       const question = await prisma.prg.findUnique({
         where: { idp: parseInt(key) },
       });
@@ -426,11 +431,12 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
               console.log(answer, "answer");
             await Promise.all(
               answer.map(async (optionId) => {
+                console.log(optionId as string, "optionId");
                 await prisma.resOU.create({
                   data: {
                     idres: Number(resp.idres),
                     idp: Number(key),
-                    idou: Number(optionId)
+                    idou: Number(optionId as string),
                   },
                 });
               })
@@ -533,10 +539,229 @@ export const createAnswersAndInsertActivityNewFormData = async (req: Request, re
 };
 
 
+export const updateAnswersAndActivityData = async (req: Request, res: Response) => {
+    const { idproj, name, idsubunidad } = req.body; // Campos de texto
+    const fInit = new Date(req.body.fInit); // Parse date fields
+    const fFin = new Date(req.body.fFin); // Parse date fields
+    const responses = JSON.parse(req.body.responses || "{}"); // Respuestas en formato JSON
+    const { id } = req.params; // ID de la subunidad o actividad
+    const idActivity = Number(id);
 
+    
+    console.log(req.body, "responses");
+    console.log(fInit, "finit");
+    
+    
+    
+    if (!idproj || !responses || !fFin || !fInit || !name || !idActivity) {
+        res.status(400).json({ error: "Los datos del proyecto, respuestas, fechas y la actividad son requeridos." });
+        return;
+    }
+    
+    // cambios put de actividad
+    try {
+      console.log("Datos recibidos para actualizar:", responses);
+  
+      // Verificar si la actividad existe
+      const activity = await prisma.actividad.findUnique({
+        where: { idActivi: idActivity },
+      });
+  
+      if (!activity) {
+        res.status(404).json({ error: "Actividad no encontrada." });
+        return;
+    }
+    const newActivity = await prisma.actividad.update({
+        where: { idActivi: idActivity },
+        data: {
+          fInit: new Date(fInit),
+          fFin: new Date(fFin),
+          name: name,
+        },
+    });
+    if (!newActivity) {
+        res.status(404).json({ error: "Actividad no actualizada." });
+        return;
+    }
+    const respuesta = await prisma.res.findUnique({
+        where: { idres: activity.idres },
+    });
+    console.log(activity.idres, "respuesta");
+    if (!respuesta) {
+        res.status(404).json({ error: "Respuestas no encontradas." });
+        return;
+    }
+      
+      // Actualizar las respuestas existentes
+      for (const [key, value] of Object.entries(responses)) {
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+          continue; // Skip empty responses
+        }
+        const question = await prisma.prg.findUnique({
+          where: { idp: parseInt(key) },
+        });
+  
+        if (!question) {
+          console.error(`Pregunta con ID ${key} no encontrada.`);
+          continue;
+        }
+  
+        // Procesar archivos si son parte de las respuestas
+        if (value === "file") {
+          const file = (req.files as Express.Multer.File[]).find((f) => f.fieldname === key);
+          if (!file) {
+            console.error(`Archivo con fieldname ${key} no encontrado.`);
+            continue;
+          }
+          const resfile = await prisma.resFile.findFirst({ where: { idres: activity.idres, idp: parseInt(key) } });
+            if (!resfile) {
+                console.log("Respuesta no valida");
+                continue;
+            }
+          await prisma.resFile.upsert({
+            where: { 
+                idresfile: resfile.idresfile
+            },
+            update: { resFile: file.path },
+            create: {
+              idres: activity.idres,
+              idp: parseInt(key),
+              resFile: file.path,
+            },
+          });
+        } else {
+          const answer = Array.isArray(value) ? value : [value];
+  
+          switch (question.type) {
+            case "text":
+                const restext = await prisma.resTxt.findFirst({ where: { idres: activity.idres, idp: parseInt(key) } });
+                if (!restext) {
+                    console.log("Respuesta no valida");
+                    continue;
+                }
+              await prisma.resTxt.update({
+                where: { idrestxt: restext.idrestxt },
+                data: { resTxt: String(value) },
+              });
+              break;
+  
+            case "multipleChoice":
+              /*await prisma.resOM.deleteMany({ where: { idres: activity.idres, idp: parseInt(key) } });
+              await Promise.all(
+                answer.map(async (optionId) => {
+                  await prisma.resOM.create({
+                    data: {
+                      idres: activity.idres,
+                      idp: parseInt(key),
+                      idomul: parseInt(optionId as string),
+                    },
+                  });
+                })
+              );*/
+              break;
+  
+            case "singleChoice":
+                const resou = await prisma.resOU.findFirst({ where: { idres: activity.idres, idp: parseInt(key) } });
+                if (!resou) {
+                    console.log("Respuesta no valida");
+                    continue;
+                }
+                console.log(answer, "answer");
+                console.log(parseInt(answer[0] as string), "answer 2");
+              await prisma.resOU.update({
+                where: { idresou: resou.idresou },
+                data: { idou: Number(answer[0] as string) },
+              });
+              break;
+  
+            case "dropdown":
+              await prisma.resOD.upsert({
+                where: { idresod: activity.idres },
+                update: { idodes: parseInt(answer[0] as string) },
+                create: {
+                  idres: activity.idres,
+                  idp: parseInt(key),
+                  idodes: parseInt(answer[0] as string),
+                },
+              });
+              break;
+  
+            case "date":
+                const fecha = new Date(String(value));
+                console.log("fecha", value , " --------------------------- " , fecha);
+                if (fecha  ) {
+                    const resdate = await prisma.resDate.findFirst({ where: { idres: activity.idres, idp: parseInt(key) } });
+                if (!resdate) {
+                    console.log("Respuesta no valida");
+                    continue;
+                }
+              await prisma.resDate.update({
+                where: { idresdate: resdate.idresdate },
+                data:{
+                  resdate: fecha,
+                },
+              });
+                console.log("Fecha no valida");
+                continue;
+              }
+              break;
+  
+            default:
+              console.warn(`Tipo de pregunta desconocido para la pregunta ${key}.`);
+          }
+        }
+      }
+  
+      // Actualizar las fechas de la actividad
+      await prisma.actividad.update({
+        where: { idActivi: idActivity },
+        data: {
+          fInit: new Date(fInit),
+          fFin: new Date(fFin),
+          name: name,
+        },
+      });
+  
+      // Actualizar las fechas del proyecto si es necesario
+      const project = await prisma.project.findUnique({
+        where: { idproj: Number(idproj) },
+      });
+  
+      if (project) {
+        let updatedFInit = project.fInit;
+        if (!project.fInit || new Date(fInit) < new Date(project.fInit)) {
+          updatedFInit = new Date(fInit);
+        }
+  
+        let updatedFFin = project.fFin;
+        if (!project.fFin || new Date(fFin) > new Date(project.fFin)) {
+          updatedFFin = new Date(fFin);
+        }
+  
+        if (updatedFInit !== project.fInit || updatedFFin !== project.fFin) {
+          await prisma.project.update({
+            where: { idproj: Number(idproj) },
+            data: {
+              fInit: updatedFInit,
+              fFin: updatedFFin,
+            },
+          });
+        }
+      }
+  
+      res.status(200).json({ message: "Actividad y respuestas actualizadas correctamente." });
+      return;
+    } catch (error) {
+      console.error("Error al actualizar los datos:", error);
+      res.status(500).json({ error: "Error interno al actualizar los datos." });
+      return;
+    }
+  };
+
+  
 export const updateAnswersAndActivity = async (req: Request, res: Response) => {
     const { responses, idproj, fInit, fFin, name, idActivity } = req.body;
-
+    console.log(req.body, "req.body");
     if (!responses || !idproj || !idActivity) {
         return res.status(400).json({ error: 'Las respuestas, ID del proyecto y ID de la actividad son requeridos.' });
     }

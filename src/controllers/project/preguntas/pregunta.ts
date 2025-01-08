@@ -41,7 +41,7 @@ export const handleDynamicQuestions = async (req: Request, res: Response): Promi
         }
         for (const question of questions) {
             const { type, questionText, options } = question;
-
+            console.log(question, "Pregunta");
             // Identificar el tipo de pregunta y guardarla en la tabla correspondiente
             if (type === 'text') {
                 // Insertar pregunta de texto
@@ -299,11 +299,11 @@ export const updateQuestionsByForm = async (req: Request, res: Response) => {
     if (!idfor || !questions) {
         return res.status(400).json({ error: 'El ID del formulario y las preguntas son requeridos.' });
     }
-
+    console.log(questions, "Pregunta s data");
     try {
         for (const question of questions) {
             const { id: questionId, type, text, options = [] } = question; // Renombrar questionText a text
-
+            console.log(questionId, "ID", type, "Type", text, "Text", options, "Options");
             // Asegúrate de que el ID sea un número o null si no está presente
             const numericId = questionId ? Number(questionId) : undefined;
 
