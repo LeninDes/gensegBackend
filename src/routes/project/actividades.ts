@@ -1,5 +1,5 @@
 import express from 'express'
-import { upload, getDataActivities, updateAnswersAndActivityData, createAnswersAndInsertActivity, probar, createAnswersAndInsertActivityNewFormData, getNumberEstatesActivities, updateAnswersAndActivity,deleteActivityAndResponses } from '../../controllers/project/actividad';
+import {getAllNumberAtcivity, upload, getDataActivities, updateAnswersAndActivityData, createAnswersAndInsertActivity, probar, createAnswersAndInsertActivityNewFormData, getNumberEstatesActivities, updateAnswersAndActivity,deleteActivityAndResponses } from '../../controllers/project/actividad';
 
 const router = express.Router();
 
@@ -10,5 +10,6 @@ router.get('/actividad/:id', getDataActivities);
 //router.post('/actividad', createAnswersAndInsertActivity);
 router.delete('/actividad/:id', deleteActivityAndResponses);
 router.get('/actividad/subunidad/:id',getNumberEstatesActivities);
+router.get('/actividad/', getAllNumberAtcivity);
 
 export default router;

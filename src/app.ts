@@ -21,6 +21,8 @@ import Actividad from './routes/project/actividades'
 import Facultad from './routes/facultad/facultad'
 import Escuela from './routes/facultad/escuela'
 import PrgEstudio from './routes/facultad/prgEstudio'
+import Carrusel from './routes/pagina/pagina'
+import Anuncio from './routes/pagina/anuncio'
 //import swaggerUi from 'swagger-ui-express';
 //import yaml from 'yamljs';
 //--------------
@@ -53,6 +55,8 @@ app.use('/api', Actividad);
 app.use('/api', Facultad);
 app.use('/api', Escuela);
 app.use('/api', PrgEstudio);
+app.use('/api', Carrusel);
+app.use('/api', Anuncio);
 
 
 export default app;

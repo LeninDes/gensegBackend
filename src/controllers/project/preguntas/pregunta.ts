@@ -321,6 +321,8 @@ export const updateQuestionsByForm = async (req: Request, res: Response) => {
                 },
             });
 
+            
+
             // Eliminar opciones antiguas dependiendo del tipo
             if (type === 'multipleChoice') {
                 await prisma.opcMul.deleteMany({ where: { idp: updatedQuestion.idp } });

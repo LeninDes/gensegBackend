@@ -646,7 +646,7 @@ export const updateAnswersAndActivityData = async (req: Request, res: Response) 
               break;
   
             case "multipleChoice":
-              /*await prisma.resOM.deleteMany({ where: { idres: activity.idres, idp: parseInt(key) } });
+              await prisma.resOM.deleteMany({ where: { idres: activity.idres, idp: parseInt(key) } });
               await Promise.all(
                 answer.map(async (optionId) => {
                   await prisma.resOM.create({
@@ -657,7 +657,7 @@ export const updateAnswersAndActivityData = async (req: Request, res: Response) 
                     },
                   });
                 })
-              );*/
+              );
               break;
   
             case "singleChoice":
@@ -1177,4 +1177,33 @@ export const getDataActivities = async (req: Request, res: Response): Promise<vo
 };
 
 
+export const getAllNumberAtcivity = async (req: Request, res: Response): Promise<void> => {
+
+    try {
+
+        // Obtener todas las actividades de los proyectos relacionados con la subunidad
+        const activities = await prisma.actividad.findMany({
+            select: {
+                estado: true,
+            },
+        });
+
+        if (!activities || activities.length === 0) {
+            res.status(404).json({ message: "No se encontraron actividades" });
+            return;
+        }
+
+        // Acumular los estados de las actividades
+        const stateCounts = activities.reduce((acc: Record<string, number>, activity) => {
+            const state = activity.estado || "Desconocido"; // Manejar estados nulos o no definidos
+            acc[state] = (acc[state] || 0) + 1; // Incrementar el contador para el estado actual
+            return acc;
+        }, {});
+
+        res.status(200).json(stateCounts);
+    } catch (error) {
+        console.error("Error al obtener actividades:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
 

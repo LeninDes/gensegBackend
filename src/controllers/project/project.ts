@@ -529,3 +529,63 @@ export const getProjectStates = async (req: Request, res: Response): Promise<voi
         res.status(500).json({ message: "Error interno del servidor" });
     }
 };
+
+
+export const getActivitiesAll = async (req: Request, res: Response): Promise<void> => {
+
+
+    try {
+
+        // Obtener todas las actividades de los proyectos relacionados con la subunidad
+        const activities = await prisma.actividad.findMany({
+            where: {
+            },
+            select: {
+                estado: true,
+                fInit: true,
+            },
+        });
+
+        if (!activities || activities.length === 0) {
+            res.status(404).json({ message: "No se encontraron actividades" });
+            return;
+        }
+
+        // Transformar y agrupar actividades por mes
+        const monthlyAccumulation: Record<string, { date: string; completado: number; pendiente: number; archivado: number; curso: number }> = {};
+
+        activities.forEach((activity) => {
+            if (activity.fInit) {
+                const date = new Date(activity.fInit);
+                const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; // Formato "YYYY-MM"
+
+                if (!monthlyAccumulation[yearMonth]) {
+                    monthlyAccumulation[yearMonth] = {
+                        date: yearMonth + "-05", // Fecha formateada como "YYYY-MM-05" (día fijo)
+                        completado: 0,
+                        pendiente: 0,
+                        archivado: 0,
+                        curso: 0,
+                    };
+                }
+
+                // Acumular datos según estado de la actividad
+                if (activity.estado === "Completado") monthlyAccumulation[yearMonth].completado++;
+                if (activity.estado === "Pendiente") monthlyAccumulation[yearMonth].pendiente++;
+                if (activity.estado === "Archivado") monthlyAccumulation[yearMonth].archivado++;
+                if (activity.estado === "Curso") monthlyAccumulation[yearMonth].curso++;
+            }
+        });
+
+        // Convertir el objeto acumulado a un array
+        const transformedActivities = Object.values(monthlyAccumulation);
+
+        // Ordenar las actividades por fecha ascendente
+        transformedActivities.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        res.status(200).json(transformedActivities);
+    } catch (error) {
+        console.error("Error al obtener actividades:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};

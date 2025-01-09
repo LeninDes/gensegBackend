@@ -25,6 +25,8 @@ model Rol {
   id_rol      Int     @id     @default(autoincrement())
   n_rol       String  @unique
   abrev       String
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
   datellePermisos   DetallePermiso[]
   usuarios          Usuario[]
 }
@@ -33,6 +35,8 @@ model Permiso {
   id_per            Int     @id     @default(autoincrement())
   n_per             String  @unique
   abreviatura       String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
   datellePermisos    DetallePermiso[]
 }
 
@@ -44,10 +48,13 @@ model DetallePermiso {
   permisos  Permiso @relation(fields: [id_per], references: [id_per])
   roles     Rol @relation(fields: [id_rol], references: [id_rol])
 }
+
 model Sub_unidad {
   id_subuni Int @id @default(autoincrement())
   n_subuni  String  @unique
   abreviatura     String
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
   usuarios     Usuario[]
   form         Form[]
 }
@@ -58,7 +65,9 @@ model Usuario {
   password              String
   email                 String
   idpe                  Int
-  rol_id                Int   
+  rol_id                Int
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
   subunidad_id_subuni   Int   
   @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta
   rol       Rol         @relation(fields: [rol_id], references: [id_rol])
@@ -75,7 +84,7 @@ model Form {
   estado    Boolean @default(false)
   abre      String?
   Fcreate   DateTime  @default(now())
-  Fupdate   DateTime?
+  Fupdate   DateTime? 
   idsubuni  Int
   subunidad Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
   prg       Prg[]
@@ -88,6 +97,8 @@ model Prg {
   nmPrg     String  
   idf       Int
   type      String
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
   form      Form  @relation(fields: [idf], references: [idf])
   opcmul    OpcMul[]
   opcuni    OpcUni[]
@@ -200,6 +211,10 @@ model Facu {
   idfacu    Int @id @default(autoincrement())
   nmFacu    String
   abrev     String?
+  
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
   escuelas  Escuela[]
 }
 
@@ -208,6 +223,10 @@ model Escuela {
   nmEsc     String
   idfacu    Int
   abrev     String?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  
   facu      Facu @relation(fields: [idfacu], references: [idfacu])
   prgest    PrgEstudio[]
 }
@@ -215,17 +234,41 @@ model Escuela {
 model PrgEstudio {
   idpe      Int @id @default(autoincrement())
   nmPE      String
-  idesc     Int
   abrev     String?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  idesc     Int
   escuela   Escuela @relation(fields: [idesc], references: [idesc])
   usuario   Usuario[]
+  estudiante Estudiante[]
+
+}
+
+model Estudiante {
+  idest     Int     @id @default(autoincrement())
+  dni       String  
+  codigo    String  @unique @db.Char(6)
+  nombre    String
+  aPaterno  String
+  aMaterno  String
+  email     String  
+  fechaNacimiento DateTime
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  idpe      Int
+  prgest    PrgEstudio @relation(fields: [idpe], references: [idpe])
+  actividades AlumnoActividad[]
 
 }
 
 enum EstadoProyecto {
   PENDIENTE
   ARCHIVADO
-  ENCURSO
+  CURSO
   COMPLETADO
 }
 
@@ -237,6 +280,10 @@ model Project {
   idString              String?
   fInit                 DateTime?
   fFin                  DateTime?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
   id_rol                Int
   subunidad_id_subuni   Int
   usuario               Usuario @relation(fields: [dni, id_rol, subunidad_id_subuni], references: [dni, rol_id, subunidad_id_subuni])  
@@ -250,8 +297,49 @@ model Actividad {
   fFin                  DateTime
   estado                String
   idString              String?
+  public                Boolean   @default(false)
+  tipo                  String    @default("normal")
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
   idproj                Int
   idres                 Int
   project               Project   @relation(fields: [idproj], references: [idproj])
   res                   Res       @relation(fields: [idres], references: [idres])
+  alumnoActividad       AlumnoActividad[]
+}
+
+enum EstadoAlumnoActividad {
+  INSCRITO
+  COMPLETADO
+  ABANDONADO
+}
+
+model AlumnoActividad {
+  id          Int            @id @default(autoincrement())
+  alumnoId    Int
+  actividadId Int
+  estado      EstadoAlumnoActividad         // Ej: Inscrito, Completado, Abandonado
+  asistio     Boolean        @default(false)
+  fechaInscripcion  DateTime  @default(now())
+  fechaConluida     DateTime? // Opcional: Fecha de completado de la actividad
+  alumno      Estudiante         @relation(fields: [alumnoId], references: [idest]) // Relación con Alumno
+  actividad   Actividad      @relation(fields: [actividadId], references: [idActivi]) // Relación con Actividad
+  notaFinal   Float?         // Opcional: Nota de evaluación en la actividad
+}
+
+model Carrusel {
+  idcarrusel    Int @id @default(autoincrement())
+  img           String
+  titulo        String
+  subtitulo     String
+}
+
+model Anuncio {
+  idanuncio     Int @id @default(autoincrement())
+  titulo        String
+  descripcion   String
+  fInicio       DateTime
+  fFin          DateTime
 }
