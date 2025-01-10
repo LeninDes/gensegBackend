@@ -70,65 +70,185 @@ export const createCarouselConfig = async (req: Request, res: Response) => {
         return;
     }
 };
-/*
-export const updateCarouselConfig = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { title1, desc1, title2, desc2, title3, desc3, title4, desc4 } = req.body;
-    const files = req.files as Express.Multer.File[];
-
-    if (!title1 || !desc1 || !title2 || !desc2 || !title3 || !desc3 || !title4 || !desc4 || files.length !== 4) {
-        return res.status(400).json({ error: "All titles, descriptions, and 4 images are required." });
-    }
-
-    try {
-        const carousel = await prisma.carrusel.update({
-            where: { id: Number(id) },
-            data: {
-                images: {
-                    updateMany: [
-                        { where: { id: 1 }, data: { title: title1, description: desc1, imagePath: files[0].path } },
-                        { where: { id: 2 }, data: { title: title2, description: desc2, imagePath: files[1].path } },
-                        { where: { id: 3 }, data: { title: title3, description: desc3, imagePath: files[2].path } },
-                        { where: { id: 4 }, data: { title: title4, description: desc4, imagePath: files[3].path } },
-                    ],
-                },
-            },
-        });
-
-        res.status(200).json({ message: "Carousel configuration updated successfully.", carousel });
-    } catch (error) {
-        console.error("Error updating carousel configuration:", error);
-        res.status(500).json({ error: "Internal server error." });
-    }
-};*/
 
 export const getCarouselConfig = async (req: Request, res: Response) => {
     try {
         const carousel = await prisma.carrusel.findMany({});
-
+        
         if (!carousel) {
             return res.status(404).json({ error: "Carousel configuration not found." });
         }
-
+        
         res.status(200).json(carousel);
     } catch (error) {
         console.error("Error fetching carousel configuration:", error);
         res.status(500).json({ error: "Internal server error." });
         return;
     }
-};
-/*
-export const deleteCarouselConfig = async (req: Request, res: Response) => {
-    const { id } = req.params;
+};      
+                
+export const getEstudiante = async (req: Request, res: Response) => {
+    const { codigo, dni } = req.params;
+
+    if (!codigo || !dni) {
+    res.status(400).json({ error: 'Codigo y DNI son obligatorios' });
+    return;
+}
 
     try {
-        await prisma.carousel.delete({
-            where: { id: Number(id) },
+    const estudiante = await prisma.estudiante.findUnique({
+        where: {
+            codigo: String(codigo),
+            dni: String(dni),
+        },
+        include : {
+        prgest: true,
+        }
+    });
+
+    if (!estudiante) {
+        res.status(404).json({ error: 'Estudiante no encontrado' });
+        return;
+    }
+
+    res.json({estudiante});
+    } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+    return;
+    }
+};
+
+export const AllActivitiesPublic = async (req: Request, res: Response) => {
+    try {
+        const activities = await prisma.actividad.findMany({
+            where: {
+                public: true
+            },
+            include: {
+                project: {
+                    include: {
+                        usuario: true
+                }
+                }
+            }
+
         });
 
-        res.status(200).json({ message: "Carousel configuration deleted successfully." });
+
+        if (!activities || activities.length === 0) {
+            res.status(404).json({ error: "No activities found." });
+            return;
+        }
+
+        res.status(200).json(activities);
     } catch (error) {
-        console.error("Error deleting carousel configuration:", error);
+        console.error("Error fetching activities:", error);
         res.status(500).json({ error: "Internal server error." });
     }
-};*/
+}
+
+export const Inscripcion = async (req: Request, res: Response) => {
+    const { idactividad, idestudiante } = req.body;
+
+    if (!idactividad || !idestudiante) {
+        res.status(400).json({ error: "Activity ID and student ID are required." });
+        return;
+    }
+
+    try {
+
+        const isRegistered = await prisma.alumnoActividad.findFirst({
+            where: {
+                actividadId: Number(idactividad),
+                alumnoId: Number(idestudiante),
+            },
+        });
+        if (isRegistered) {
+            res.status(404).json({ message: "El usuario ya esta registrado" });
+            return;
+        }
+
+        const inscripcion = await prisma.alumnoActividad.create({
+            data: {
+                actividadId: Number(idactividad),
+                alumnoId: Number(idestudiante),
+                estado: "INSCRITO",
+            },
+        });
+        if (!inscripcion) {
+            res.status(404).json({ message: "El usuario ya esta registrado" });
+            return;
+        }
+
+        res.status(201).json({ message: "Inscripción realizada correctamente.", inscripcion });
+    } catch (error) {
+        console.error("Error creating inscription:", error);
+        res.status(500).json({ error: "Internal server error." });
+    }
+}
+
+
+
+export const ActivitiCompletToAlumno = async (req: Request, res: Response) => {
+    const { dni, id } = req.params;
+    if (!dni || !id) {
+        res.status(400).json({ error: "id subunidad " });
+        return;
+    }
+    const idsubunidad = Number(id);
+    try {
+        const actividadesAsistidas = await prisma.alumnoActividad.findMany({
+            where: {
+              asistio: true,
+              alumno: {
+                dni: dni, // DNI del estudiante
+              },
+              actividad: {
+                project: {
+                  subunidad_id_subuni: idsubunidad, // ID de la subunidad
+                },
+              },
+            },
+            include: {
+              actividad: {
+                select: {
+                  name: true, // Nombre de la actividad
+                  fInit: true, // Fecha de inicio
+                  fFin: true, // Fecha de finalización
+                  estado: true, // Estado de la actividad
+                  public: true, // Indicador si es pública
+                },
+              },
+              alumno: {
+                select: {
+                    dni: true, // DNI del estudiante
+                    codigo: true, // Código del estudiante
+                    aMaterno: true, // Apellido materno
+                    aPaterno: true, // Apellido paterno
+                    nombre: true, // Nombres
+                    prgest: {
+                        select: {
+                            nmPE: true, // Programa de estudio
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    if (!actividadesAsistidas) {
+        res.status(404).json({ error: 'Actividades no encontradas' });
+        return;
+    }
+    if (actividadesAsistidas.length >= 3) {
+        res.status(201).json({ message: "Solicitar certificado esta disponible.",  actividadesAsistidas});
+        return;
+    }
+    else {
+        res.status(201).json({ message: "Solicitar certificado no disponible.",  actividadesAsistidas});
+        return;
+    }
+    } catch (error) {
+        console.error("Error creating inscription:", error);
+        res.status(500).json({ error: "Internal server error." });
+    }
+}

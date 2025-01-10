@@ -1207,3 +1207,88 @@ export const getAllNumberAtcivity = async (req: Request, res: Response): Promise
     }
 };
 
+
+export const toggleAsistencia = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { participo: isParticipo, idsubunidad, idActivi } = req.body;
+    console.log(isParticipo, "isParticipo");
+  try {
+    if (!id || !idsubunidad || !idActivi) {
+      res.status(400).json({ message: "El ID de la actividad es requerido" });
+      return;
+    }
+
+    const updateAlumnoActividad = await prisma.alumnoActividad.findFirst({
+        where: { alumnoId: Number(id), actividadId: Number(idActivi) },
+        });
+    
+    if (!updateAlumnoActividad) {
+      res.status(404).json({ message: "No se encontró la actividad" });
+      return;
+    }
+    await prisma.alumnoActividad.update({
+        where: { id: updateAlumnoActividad.id },
+        data: { asistio: isParticipo,
+            estado: isParticipo ? "COMPLETADO" : "INSCRITO"
+         },
+        });
+
+    
+        res.status(200).json({ message: "Asistencia actualizada correctamente" });
+        return;
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "No se pudo actualizar la actividad" });
+  }
+    };
+
+export const toggleActividadP = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { public: isPublic } = req.body;
+
+  try {
+    if (!id) {
+      res.status(400).json({ message: "El ID de la actividad es requerido" });
+      return;
+    }
+    const updatedActividad = await prisma.actividad.update({
+      where: { idActivi: Number(id) },
+      data: { public: isPublic },
+    });
+    res.status(200).json(updatedActividad);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "No se pudo actualizar la actividad" });
+  }
+}
+
+
+export const AlumnosActividad = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+  try {
+    if (!id) {
+      res.status(400).json({ message: "El ID de la actividad es requerido" });
+      return;
+    }
+    const activdadAlumno = await prisma.alumnoActividad.findMany({
+        where: {
+            actividadId: Number(id),
+        },
+        select: {
+            alumno: true,
+            asistio: true,
+            estado: true,
+        }
+        });
+    if (!activdadAlumno) {
+      res.status(404).json({ message: "No se encontró la actividad" });
+      return;
+    }
+    res.status(200).json(activdadAlumno);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "No se pudo actualizar la actividad" });
+  }
+}

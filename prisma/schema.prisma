@@ -25,8 +25,10 @@ model Rol {
   id_rol      Int     @id     @default(autoincrement())
   n_rol       String  @unique
   abrev       String
+
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
+  
   datellePermisos   DetallePermiso[]
   usuarios          Usuario[]
 }
@@ -35,8 +37,10 @@ model Permiso {
   id_per            Int     @id     @default(autoincrement())
   n_per             String  @unique
   abreviatura       String?
+
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
+
   datellePermisos    DetallePermiso[]
 }
 
@@ -53,10 +57,13 @@ model Sub_unidad {
   id_subuni Int @id @default(autoincrement())
   n_subuni  String  @unique
   abreviatura     String
+
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
+
   usuarios     Usuario[]
   form         Form[]
+  certificados Certificado[]
 }
 model Usuario {
   dni                   String @db.Char(8)
@@ -66,8 +73,10 @@ model Usuario {
   email                 String
   idpe                  Int
   rol_id                Int
+
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
+
   subunidad_id_subuni   Int   
   @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta
   rol       Rol         @relation(fields: [rol_id], references: [id_rol])
@@ -83,8 +92,10 @@ model Form {
   nmForm    String  
   estado    Boolean @default(false)
   abre      String?
+
   Fcreate   DateTime  @default(now())
   Fupdate   DateTime? 
+
   idsubuni  Int
   subunidad Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
   prg       Prg[]
@@ -97,8 +108,10 @@ model Prg {
   nmPrg     String  
   idf       Int
   type      String
+
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
+
   form      Form  @relation(fields: [idf], references: [idf])
   opcmul    OpcMul[]
   opcuni    OpcUni[]
@@ -243,7 +256,6 @@ model PrgEstudio {
   escuela   Escuela @relation(fields: [idesc], references: [idesc])
   usuario   Usuario[]
   estudiante Estudiante[]
-
 }
 
 model Estudiante {
@@ -262,7 +274,7 @@ model Estudiante {
   idpe      Int
   prgest    PrgEstudio @relation(fields: [idpe], references: [idpe])
   actividades AlumnoActividad[]
-
+  certificados Certificado[]
 }
 
 enum EstadoProyecto {
@@ -327,6 +339,17 @@ model AlumnoActividad {
   alumno      Estudiante         @relation(fields: [alumnoId], references: [idest]) // Relación con Alumno
   actividad   Actividad      @relation(fields: [actividadId], references: [idActivi]) // Relación con Actividad
   notaFinal   Float?         // Opcional: Nota de evaluación en la actividad
+
+}
+
+model Certificado {
+  idCertificado    Int      @id @default(autoincrement())
+  alumnoId         Int
+  subunidadId      Int
+  fechaEmision     DateTime @default(now())
+  actividadesCompletadas Int @default(0)
+  alumno           Estudiante @relation(fields: [alumnoId], references: [idest])
+  subunidad        Sub_unidad @relation(fields: [subunidadId], references: [id_subuni])
 }
 
 model Carrusel {

@@ -83,6 +83,7 @@ export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promi
             if (!forms || forms.length === 0) {
                 res.status(404).json({
                     message: 'No se encontraron formularios',
+                    forms
                 });
                 return;
             }

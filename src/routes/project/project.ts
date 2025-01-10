@@ -1,5 +1,5 @@
 import express from 'express'
-import { getActivitiesAll,  upload, deleteProject, updateProject, getQuestionsByFormActive, createProject, getActivitysByProject, getProjectBySubUnidad, getProjectStates,  getActivitiesAllBySubunidad, getProjectByUserSubUnidad, getProjectAllBySubunidad} from '../../controllers/project/project';
+import {getProjectStatesAll,  getActivitiesAll,  upload, deleteProject, updateProject, getQuestionsByFormActive, createProject, getActivitysByProject, getProjectBySubUnidad, getProjectStates,  getActivitiesAllBySubunidad, getProjectByUserSubUnidad, getProjectAllBySubunidad} from '../../controllers/project/project';
 
 const router = express.Router();
 
@@ -9,6 +9,7 @@ router.get('/project/form/:id', getQuestionsByFormActive);
 router.get('/project/graficos/', getActivitiesAll);
 router.get('/project/graficos/:id', getActivitiesAllBySubunidad);
 router.get('/project/dona/:id', getProjectStates);
+router.get('/project/dona/', getProjectStatesAll);
 router.put('/project/:id',upload.single('file'), updateProject);
 router.delete('/project/:id',deleteProject);
 //router.get('/project/graficos/:id', getProjectAllBySubunidad);

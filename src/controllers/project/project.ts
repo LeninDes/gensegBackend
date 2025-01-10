@@ -57,12 +57,35 @@ export const createProject = async (req: Request, res: Response) => {
             },
         });
 
+        const sub = await prisma.sub_unidad.findUnique({
+            where: { id_subuni : Number(subunidad) }
+        });
+        if(!sub){
+            res.status(400).json({ error: 'No existe la subunidad.' });
+            return;
+        }
+        const usuario = await prisma.usuario.findFirst({
+            where: { dni : newProject.dni }
+        });
+        
+        if(!usuario){
+            res.status(400).json({ error: 'No existe el usuario.' });
+            return;
+        }
+        const prgEstudio = await prisma.prgEstudio.findUnique({
+            where: { idpe : usuario.idpe }
+        });
+        if(!prgEstudio){
+            res.status(400).json({ error: 'No existe el prgEstudio.' });
+            return;
+        }
+
         await prisma.project.update({
             where:{
                 idproj: newProject.idproj,
             },
             data:{
-                idString: String(1000+newProject.idproj)
+                idString: generarIdProyecto(prgEstudio.abrev || "NAN", sub.abreviatura, newProject.idproj),
             }
         })
         console.log(newProject, "Proyecto creado exitosamente");
@@ -77,6 +100,17 @@ export const createProject = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Ocurrió un error al crear el proyecto.' });
     }
 };
+
+function generarIdProyecto(
+    abreviaturaPrograma: string,
+    abreviaturaSubunidad: string,
+    id: number
+  ): string {
+    
+    const idConFormato = id.toString().padStart(3, "0"); // Asegura 3 dígitos
+  
+    return `${abreviaturaPrograma}-${abreviaturaSubunidad}-${idConFormato}`;
+  }
 
 export const updateProject = async (req: Request, res: Response) => {
     const { id }=req.params;
@@ -233,6 +267,9 @@ export const getProjectBySubUnidad = async (req: Request, res: Response) => {
         const projectSubUnidad = await prisma.project.findMany({
             where:{
                 subunidad_id_subuni: Number(id)
+            },
+            orderBy: {
+                idproj: 'asc', // Ordenar de forma ascendente; usa 'desc' si necesitas descendente
             }
         })
         if(!projectSubUnidad){
@@ -504,6 +541,39 @@ export const getProjectStates = async (req: Request, res: Response): Promise<voi
             where: {
                 subunidad_id_subuni: Number(id), // Relación con la subunidad
             },
+            select: {
+                estado: true, // Selecciona el campo "estado"
+            },
+        });
+
+        if (!projects || projects.length === 0) {
+            res.status(404).json({ message: "No se encontraron proyectos" });
+            return;
+        }
+
+        // Contar los estados
+        const stateCounts = projects.reduce(
+            (acc, project) => {
+                acc[project.estado] = (acc[project.estado] || 0) + 1;
+                return acc;
+            },
+            { Completado: 0, Pendiente: 0, Archivado: 0, Curso: 0 } as Record<string, number>
+        );
+        const total = projects.length;
+        res.status(200).json({...stateCounts, total});
+    } catch (error) {
+        console.error("Error al obtener proyectos:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+
+export const getProjectStatesAll = async (req: Request, res: Response): Promise<void> => {
+
+    try {
+
+        // Obtener todos los proyectos relacionados con la subunidad
+        const projects = await prisma.project.findMany({
             select: {
                 estado: true, // Selecciona el campo "estado"
             },
