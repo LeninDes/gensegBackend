@@ -19,7 +19,7 @@ model User {
   usuario String @unique
   password String
 }
-
+  
 // TABLA DE ROLES
 model Rol {
   id_rol      Int     @id     @default(autoincrement())
@@ -63,7 +63,7 @@ model Sub_unidad {
 
   usuarios     Usuario[]
   form         Form[]
-  certificados Certificado[]
+  plantillas   Plantilla[]
 }
 model Usuario {
   dni                   String @db.Char(8)
@@ -274,7 +274,7 @@ model Estudiante {
   idpe      Int
   prgest    PrgEstudio @relation(fields: [idpe], references: [idpe])
   actividades AlumnoActividad[]
-  certificados Certificado[]
+  receptor    Receptor[]
 }
 
 enum EstadoProyecto {
@@ -342,14 +342,68 @@ model AlumnoActividad {
 
 }
 
+model Plantilla {
+  idplantilla  Int @id @default(autoincrement())
+  nombre       String
+  idsubunidad  Int
+  urlimg       String
+  tipo         TipoReceptor
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  subunidad    Sub_unidad @relation(fields: [idsubunidad], references: [id_subuni])
+  certificados Certificado[]
+}
+
+enum TipoReceptor {
+  PARTICIPANTE
+  ORGANIZADOR
+  COLABORADOR
+  EXTERNO
+}
+
 model Certificado {
-  idCertificado    Int      @id @default(autoincrement())
-  alumnoId         Int
-  subunidadId      Int
-  fechaEmision     DateTime @default(now())
-  actividadesCompletadas Int @default(0)
-  alumno           Estudiante @relation(fields: [alumnoId], references: [idest])
-  subunidad        Sub_unidad @relation(fields: [subunidadId], references: [id_subuni])
+  idcertificado   Int        @id @default(autoincrement())
+  idreceptor      Int
+  codigo          String     @unique
+  nombre          String
+  createdAt       DateTime   @default(now())
+  tipo            TipoReceptor     // 'Participante', 'Organizador', etc.
+  receptor_id     Int
+  idplantilla     Int     // URL de la plantilla del certificado
+  actividad_ids   Json       // IDs de las actividades asociadas
+  
+  plantilla       Plantilla  @relation(fields: [idplantilla], references: [idplantilla])
+  receptor        Receptor   @relation(fields: [receptor_id], references: [id_receptor])
+}
+
+enum Tipo {
+  ESTUDIANTE
+  EXTERNO
+}
+
+model Receptor {
+  id_receptor   Int @id @default(autoincrement())
+  tipo          Tipo // 'Estudiante', 'Externo', etc.
+  id_estudiante Int? // FK hacia Estudiante
+  id_externo    Int? // FK hacia Externo
+  
+  estudiante    Estudiante? @relation(fields: [id_estudiante], references: [idest])
+  externo       Externo?    @relation(fields: [id_externo], references: [id_ext])
+  certificados  Certificado[] // Relación con certificados emitidos a este receptor
+}
+
+model Externo {
+  id_ext     Int      @id @default(autoincrement())
+  nombre     String
+  apellido   String
+  email      String?  // Opcional, si deseas permitir certificados sin correo electrónico
+  dni        String  @unique// Opcional, si necesitas identificar externamente con un documento
+  telefono   String?  // Información de contacto adicional
+  receptor   Receptor[] // Relación con los receptores externos
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Carrusel {

@@ -1,5 +1,5 @@
 import express from 'express'
-import { createDePermiso,deleteDePermiso,getAllDePermisos,updateDePermiso,getAllPermisosToUser } from '../../controllers/privilegios/de_permisos';
+import { ToggleDetallePermiso, createDePermiso,deleteDePermiso,getAllDePermisos,updateDePermiso,getAllPermisosToUser } from '../../controllers/privilegios/de_permisos';
 
 const router = express.Router();
 
@@ -9,5 +9,5 @@ router.get('/de_permisos', getAllDePermisos);
 router.get('/de_permisos/:id', getAllPermisosToUser);
 router.put('/de_permisos/:id', updateDePermiso);
 router.delete('/de_permisos/:id', deleteDePermiso);
-
+router.put('/de_permisos/toggle/:id/', ToggleDetallePermiso);
 export default router;

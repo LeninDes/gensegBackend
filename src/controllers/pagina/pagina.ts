@@ -199,7 +199,6 @@ export const ActivitiCompletToAlumno = async (req: Request, res: Response) => {
     try {
         const actividadesAsistidas = await prisma.alumnoActividad.findMany({
             where: {
-              asistio: true,
               alumno: {
                 dni: dni, // DNI del estudiante
               },
@@ -235,16 +234,31 @@ export const ActivitiCompletToAlumno = async (req: Request, res: Response) => {
                 },
             },
         });
+        // Contar el número de actividades asistidas
+    const numeroActividadesAsistidas = await prisma.alumnoActividad.count({
+        where: {
+            alumno: {
+                dni: dni,
+            },
+            actividad: {
+                project: {
+                    subunidad_id_subuni: idsubunidad,
+                },
+            },
+            asistio: true,
+        },
+    });
+
     if (!actividadesAsistidas) {
         res.status(404).json({ error: 'Actividades no encontradas' });
         return;
     }
-    if (actividadesAsistidas.length >= 3) {
-        res.status(201).json({ message: "Solicitar certificado esta disponible.",  actividadesAsistidas});
+    if (numeroActividadesAsistidas >= 3) {
+        res.status(201).json({ message: "Solicitar certificado esta disponible.",  actividadesAsistidas , solicitar:true});
         return;
     }
     else {
-        res.status(201).json({ message: "Solicitar certificado no disponible.",  actividadesAsistidas});
+        res.status(201).json({ message: "Solicitar certificado no disponible.",  actividadesAsistidas, solicitar:false });
         return;
     }
     } catch (error) {
