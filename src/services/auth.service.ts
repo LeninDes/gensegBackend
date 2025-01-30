@@ -27,13 +27,13 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
     try {
         const payload = jwt.verify(token, JWT_SECRET) as UsuarioPayload;
         
-        const user = await prisma.usuario.findFirst({where: {dni: payload.dni,n_usu: payload.n_usu, rol_id: payload.rol_id, subunidad_id_subuni: payload.subunidad_id_subuni, estado:true}});
+        const user = await prisma.usuario.findFirst({where: {dni: payload.dni, email: payload.n_usu, rol_id: payload.rol_id, subunidad_id_subuni: payload.subunidad_id_subuni, estado:true}});
 
         if (!user) {
             return res.status(404).json({ message: 'User not found', access: false });
         }
         
-        req.user = user as Usuario;
+        req.user = user as any;
         next();
     } catch (error) {
         console.error(error);

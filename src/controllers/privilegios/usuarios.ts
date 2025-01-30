@@ -56,7 +56,9 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       const users = await prisma.usuario.findMany({where: { email: email, estado: true }, 
         select: {
           dni: true,
-          n_usu: true,
+          nombre: true,
+          AMaterno: true,
+          APaterno: true,
           email: true,
           rol_id: true,
           subunidad_id_subuni: true,
@@ -114,10 +116,10 @@ export const loginUniqueUser = async (req: Request, res: Response): Promise<void
 
 /*---------- CREAR USUARIO -------*/
 export const createUser = async (req: Request, res: Response): Promise<void> => {
-    const { dni, email, usuario, password, rol_id, id_sub, idpe } = req.body;
+    const { dni, email, nombre, aPaterno, aMaterno, password, rol_id, id_sub, idpe } = req.body;
 
   try {
-    if(!dni || !usuario || !password || !rol_id || !id_sub || !email || !idpe){
+    if(!dni || !nombre || !aMaterno || !aPaterno || !password || !rol_id || !id_sub || !email ){
       res.status(400).json({ message: "Todos los campos son obligatorios." });
       return;
     }
@@ -149,7 +151,9 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       const newUser = await prisma.usuario.create({
         data: {
           dni: dniUser.dni,
-          n_usu: dniUser.n_usu,
+          nombre: dniUser.nombre,
+          APaterno: dniUser.APaterno,
+          AMaterno: dniUser.AMaterno,
           password: dniUser.password,
           email: dniUser.email,
           rol_id: Number(rol_id),
@@ -169,7 +173,9 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
           idpe: Number(idpe),
           dni: dni,
           email: email,
-          n_usu: usuario,
+          nombre: nombre,
+          APaterno: aPaterno,
+          AMaterno: aMaterno,
           password: hashedPassword,
           rol_id: Number(rol_id),
           subunidad_id_subuni: Number(id_sub),
@@ -278,7 +284,7 @@ export const toggleUserState = async (req: Request, res: Response): Promise<void
 
 export const getUser = async (req: Request, res: Response): Promise<void> => {
 
-  const user = req.user as Usuario;
+  const user = req.user as any;
 
   try {
     // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
@@ -298,6 +304,42 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: "No tienes los privilegios." });
   }
 };
+
+/*export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  const { dni, nombre, aPaterno, aMaterno } = req.body;
+
+  if (!dni || !nombre || !aPaterno || !aMaterno) {
+    res.status(400).json({ message: "Todos los campos son obligatorios." });
+    return;
+  }
+
+  try {
+    const existingUser = await prisma.usuario.findFirst({
+      where: { dni },
+    });
+
+    if (!existingUser) {
+      res.status(404).json({ message: "Usuario no encontrado." });
+      return;
+    }
+
+    const updatedUser = await prisma.usuario.update({
+      where: { dni },
+      data: {
+        nombre,
+        APaterno: aPaterno,
+        AMaterno: aMaterno,
+      },
+    });
+
+    res.status(200).json({ message: "Usuario actualizado correctamente.", updatedUser });
+  } catch (error) {
+    console.error("Error al actualizar el usuario:", error);
+    res.status(500).json({ message: "Error interno del servidor." });
+  } finally {
+    await prisma.$disconnect();
+  }
+};*/
 
 /* 
 

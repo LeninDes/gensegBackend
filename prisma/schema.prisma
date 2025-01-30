@@ -67,22 +67,25 @@ model Sub_unidad {
 }
 model Usuario {
   dni                   String @db.Char(8)
-  n_usu                 String 
+  nombre                String 
+  APaterno              String
+  AMaterno              String
   estado                Boolean @default(true)
   password              String
   email                 String
-  idpe                  Int
+  idpe                  Int?
   rol_id                Int
 
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
   subunidad_id_subuni   Int   
-  @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta
-  rol       Rol         @relation(fields: [rol_id], references: [id_rol])
-  sub_uni   Sub_unidad  @relation(fields: [subunidad_id_subuni], references: [id_subuni])
-  prgest    PrgEstudio  @relation(fields: [idpe], references: [idpe])
+  
+  rol                   Rol         @relation(fields: [rol_id], references: [id_rol])
+  sub_uni               Sub_unidad  @relation(fields: [subunidad_id_subuni], references: [id_subuni])
+  prgest                PrgEstudio?  @relation(fields: [idpe], references: [idpe])
   proyectos             Project[]
+  @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta
 }
 
 
@@ -283,12 +286,17 @@ enum EstadoProyecto {
   CURSO
   COMPLETADO
 }
+enum TipoProyecto {
+  SUBUNIDAD
+  PROGRAMAESTUDIO
+}
 
 model Project {
   idproj                Int     @id   @default(autoincrement())
   plan                  String  
   estado                String
   dni                   String
+  tipo                  TipoProyecto
   idString              String?
   fInit                 DateTime?
   fFin                  DateTime?
@@ -348,7 +356,9 @@ model Plantilla {
   idsubunidad  Int
   urlimg       String
   tipo         TipoReceptor
-
+  titulo       String?
+  cuerpo       String?
+  pie          String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   
@@ -370,12 +380,12 @@ model Certificado {
   nombre          String
   createdAt       DateTime   @default(now())
   tipo            TipoReceptor     // 'Participante', 'Organizador', etc.
-  receptor_id     Int
   idplantilla     Int     // URL de la plantilla del certificado
-  actividad_ids   Json       // IDs de las actividades asociadas
-  
+  actividad_ids   Int[]       // IDs de las actividades asociadas [1,2,3]
+  urlpdf          String?     // Opcional: URL del PDF generado   
+  QR              String?     // Opcional: URL del QR del certificado
   plantilla       Plantilla  @relation(fields: [idplantilla], references: [idplantilla])
-  receptor        Receptor   @relation(fields: [receptor_id], references: [id_receptor])
+  receptor        Receptor   @relation(fields: [idreceptor], references: [id_receptor])
 }
 
 enum Tipo {

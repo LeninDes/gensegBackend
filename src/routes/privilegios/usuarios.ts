@@ -11,5 +11,6 @@ router.get('/user/me', verifyToken, getUser);    // Obtener usuario logueado
 router.get('/user', AllUser);
 router.get('/user/:dni',getUserwithDNI);
 router.put('/user/toggle', toggleUserState);
+router.put('/user/:dni', );
 
 export default router;

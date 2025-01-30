@@ -6,7 +6,10 @@ export const newSubUnidad = async (req: Request, res: Response): Promise<void> =
     const {nombre, abreviatura} = req.body;
     try {
         // VALIDAMOS EL PASSWORD Y USUARIO
-        if(!nombre) throw new Error('El nombre de la subunidad es obligatorio');
+        if(!nombre){
+            res.status(400).json({message: 'El nombre es obligatorio'});
+            return;
+        }
         //if(!usuario) throw new Error('El usuario es obligatorio');
         const subUnidad = await prisma.create(
             {
@@ -16,8 +19,13 @@ export const newSubUnidad = async (req: Request, res: Response): Promise<void> =
                 }
             }
         )
-
+        if(!subUnidad)
+        {
+            res.status(400).json({message: 'No se pudo crear la subunidad'});
+            return;
+        }
         res.status(201).json({subUnidad});
+        return;
         
     } catch (error: any) {
         // TODO para manejar los errores

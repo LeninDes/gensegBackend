@@ -29,7 +29,7 @@ export const upload = multer({ storage });
 
 
 export const createProject = async (req: Request, res: Response) => {
-    const { dni, id_rol, subunidad } = req.body;
+    const { dni, id_rol, subunidad, tipo } = req.body;
 
     //console.log(req.file, "file");
     if (!req.file || !dni || !id_rol || !subunidad) {
@@ -39,14 +39,13 @@ export const createProject = async (req: Request, res: Response) => {
     // Obtener la ruta del archivo
     const planPath = req.file.path;
     const fileUrl = `https://2nlfx0w1-3000.brs.devtunnels.ms/uploads/${req.file.filename}`; // Construir la URL pública
-    //console.log(planPath, "Ruta local del archivo");
-    //console.log(fileUrl, "URL pública del archivo");
-    //console.log(planPath, "asdsa");
+    
     const date = new Date();
     date.setHours(date.getHours() - 5);
 
     try {
         // Crear proyecto
+        
         const newProject = await prisma.project.create({
             data: {
                 plan: planPath,
@@ -54,6 +53,7 @@ export const createProject = async (req: Request, res: Response) => {
                 id_rol: Number(id_rol),
                 subunidad_id_subuni: Number(subunidad),
                 estado: "Pendiente",// actualizar este estado posteriormente
+                tipo: tipo ? tipo:"PROGRAMAESTUDIO", // Add the appropriate value for 'tipo'
             },
         });
 
@@ -72,10 +72,24 @@ export const createProject = async (req: Request, res: Response) => {
             res.status(400).json({ error: 'No existe el usuario.' });
             return;
         }
+        if (usuario.idpe === null) {
+            await prisma.project.update({
+                where:{
+                    idproj: newProject.idproj,
+                },
+                data:{
+                    idString: generarIdProyecto("PSUB", sub.abreviatura, newProject.idproj),
+                    tipo: "SUBUNIDAD"
+                }
+            })
+            console.log(newProject, "Proyecto creado exitosamente");
+            res.status(201).json({ message: 'Proyecto creado exitosamente.', project: newProject, idproj: newProject.idproj, url:fileUrl });
+            return;
+        }
         const prgEstudio = await prisma.prgEstudio.findUnique({
-            where: { idpe : usuario.idpe }
+            where: { idpe: usuario.idpe }
         });
-        if(!prgEstudio){
+        if (!prgEstudio) {
             res.status(400).json({ error: 'No existe el prgEstudio.' });
             return;
         }
@@ -330,6 +344,10 @@ export const getActivitysByProject = async (req: Request, res: Response): Promis
             res.status(404).json({ message: 'No existe usuario' });
             return;
         }
+        if (user.idpe === null) {
+            res.status(202).json({ message: 'Actividades del proyecto', actividades: ActivitysByProject, datasProject, prgest: {nmPE: "NAN"}});
+            return;
+        }
         const prgest = await prisma.prgEstudio.findFirst({  
             where: { idpe: user.idpe },
         });
@@ -379,6 +397,9 @@ export const getProjectByUserSubUnidad = async (req: Request, res: Response): Pr
                 fFin: true,
                 fInit: true
                 
+            },
+            orderBy: {
+                idproj: 'asc', // Ordenar de forma ascendente; usa 'desc' si necesitas descendente
             }
         });
 
